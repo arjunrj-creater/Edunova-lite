@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Dashboard | Edunova</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../css/dashboard_student.css">
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  <span class="brand">Edunova – Student</span>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+
+    <!-- ❌ removed "Student" text -->
+    <a class="active" data-target="dashboard">Dashboard</a>
+    <a data-target="announcement">Announcements</a>
+    <a data-target="attendance">Attendance</a>
+    <a data-target="marks">Marks</a>
+    <a data-target="results">Results</a>
+    <a onclick="openProfile()">Profile</a>
+
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+
+    <div id="dashboard" class="card">
+      <h3>Welcome 👋</h3>
+      <p>Select an option from the sidebar</p>
+    </div>
+
+    <!-- ✅ ANNOUNCEMENT -->
+    <div id="announcement" class="card hidden">
+      <h3>📢 Announcements</h3>
+      <div id="announcementList">
+        <p>No announcements yet</p>
+      </div>
+    </div>
+
+    <div id="attendance" class="card hidden">
+      <h3>Attendance</h3>
+    </div>
+
+    <div id="marks" class="card hidden">
+      <h3>Marks</h3>
+    </div>
+
+    <div id="results" class="card hidden">
+      <h3>Results</h3>
+    </div>
+
+    <div id="profileCard" class="card hidden">
+      <iframe src="../common/profile.html" class="profile-iframe"></iframe>
+    </div>
+
+  </div>
+</div>
+
+<script type="module" src="./dashboard.js"></script>
+</body>
+</html>

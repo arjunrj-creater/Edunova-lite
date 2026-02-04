@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Faculty Dashboard | Edunova</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  body {
+    display: none;
+  }
+</style>
+
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI, sans-serif;
+  background:#f5f7fb;
+}
+.header{
+  background:#1e293b;
+  color:#fff;
+  padding:15px 20px;
+}
+.controls{
+  display:flex;
+  gap:15px;
+  padding:15px 20px;
+  background:#fff;
+}
+select{
+  padding:8px 10px;
+  font-size:14px;
+}
+.content{
+  padding:20px;
+}
+.box{
+  background:#fff;
+  padding:15px;
+  border-radius:8px;
+}
+.note{
+  font-size:13px;
+  color:#555;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>Faculty Dashboard</h2>
+</div>
+
+<!-- CLASS & SUBJECT CONTROLS -->
+<div class="controls">
+  <div>
+    <label>Class</label><br>
+    <select id="classSelect">
+      <option value="">Select Class</option>
+    </select>
+  </div>
+
+  <div>
+    <label>Subject</label><br>
+    <select id="subjectSelect" disabled>
+      <option value="">Select Subject</option>
+    </select>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+  <div class="box">
+    <h3 id="contextTitle">Please select class and subject</h3>
+    <p class="note" id="contextNote">
+      Attendance, marks and student list will load here.
+    </p>
+
+    <div id="dynamicContent"></div>
+  </div>
+</div>
+
+<!-- 🔐 AUTH + PROFILE GATE -->
+<script type="module">
+  import { auth, db } from "../js/firebase.js";
+  import { onAuthStateChanged } from
+    "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { doc, getDoc } from
+    "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      location.replace("/index.html");
+      return;
+    }
+
+    try {
+      // 🔎 Check user meta
+      const userSnap = await getDoc(doc(db, "users", user.uid));
+      if (!userSnap.exists()) {
+        location.replace("/index.html");
+        return;
+      }
+
+      const userData = userSnap.data();
+
+      // ❌ Not faculty
+      if (userData.role !== "faculty") {
+        location.replace("/index.html");
+        return;
+      }
+
+      // 🔁 First login not completed
+      if (userData.firstLogin === true) {
+        location.replace("/faculty/set-password.html");
+        return;
+      }
+
+      // 🔎 Check faculty profile
+      const facultySnap = await getDoc(doc(db, "faculties", user.uid));
+      if (!facultySnap.exists()) {
+        location.replace("/faculty/setup-teaching.html");
+        return;
+      }
+
+      const facultyData = facultySnap.data();
+
+      // 🚧 Teaching not configured
+      if (facultyData.profileCompleted !== true) {
+        location.replace("/faculty/setup-teaching.html");
+        return;
+      }
+
+      // ✅ ALL CLEAR → load dashboard logic
+      console.log("Faculty access granted");
+
+    } catch (err) {
+      console.error(err);
+      location.replace("/index.html");
+    }
+  });
+</script>
+
+<!-- DASHBOARD LOGIC -->
+<script src="js/faculty-dashboard.js"></script>
+
+</body>
+</html>

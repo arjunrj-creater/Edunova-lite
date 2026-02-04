@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edunova | Academic Management Platform</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="top-bar">
+    <div class="header-content">
+      <img src="images/logo.png" alt="Edunova Logo" class="logo-img">
+      <div>
+        <div class="logo-text">Edunova</div>
+        <div class="tagline">Academic Management Platform</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <div class="main-layout">
+
+    <!-- LOGIN PANEL -->
+    <div class="right-panel">
+      <h3>🔐 Sign In</h3>
+
+      <!-- ROLE (NOT FOR HOD) -->
+      <div class="form-group">
+        <label>👤 Role</label>
+        <select id="role">
+          <option value="student">Student</option>
+          <option value="faculty">Faculty</option>
+          <option value="mentor">Mentor</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>🆔 Username</label>
+        <input
+          type="text"
+          id="username"
+          placeholder="Student ID / Mentor ID / HOD Email"
+        />
+      </div>
+
+      <!-- PASSWORD (ONLY AREA MODIFIED) -->
+      <div class="form-group">
+        <label>🔑 Password</label>
+        <div style="position:relative;">
+          <input
+            type="password"
+            id="password"
+            placeholder="Enter password"
+          />
+          <span
+            id="togglePwd"
+            style="
+              position:absolute;
+              right:12px;
+              top:50%;
+              transform:translateY(-50%);
+              cursor:pointer;
+              font-size:13px;
+              color:#2563eb;
+              user-select:none;
+            "
+          >
+            Show
+          </span>
+        </div>
+      </div>
+
+      <div class="auth-links">
+        <a href="#" onclick="alert('Contact mentor or HOD to reset password')">
+          Forgot password?
+        </a>
+      </div>
+
+      <button id="loginBtn" onclick="handleLogin()">Login</button>
+
+      <p id="loginStatus" class="login-status"></p>
+
+      <p class="login-note">
+        Access credentials are provided by the institution.
+      </p>
+    </div>
+
+    <!-- OVERVIEW (UNCHANGED) -->
+    <div class="left-panel">
+
+      <div class="overview-card">
+        <h2>🏛️ Institutions</h2>
+        <p>Institutions affiliated with Edunova can access a centralized academic management system to handle
+           student records, internal evaluations, attendance management and academic monitoring securely.</p>
+      </div>
+
+      <div class="overview-card" onclick="selectRole('student')">
+        <h2>🎓 Students</h2>
+        <p>Students can securely view attendance, internal assessment marks and academic updates provided by
+           faculty members through a simple and structured interface.</p>
+      </div>
+
+      <div class="overview-card" onclick="selectRole('faculty')">
+        <h2>👩‍🏫 Faculty</h2>
+        <p>Faculty members are provided with tools to manage academic activities including attendance entry,
+           internal mark updates and academic record maintenance in a centralized system.</p>
+      </div>
+
+      <div class="overview-card" onclick="selectRole('mentor')">
+        <h2>🧑‍🏫 Mentor</h2>
+        <p>Mentors can monitor overall student performance and 
+           academic progress using summarized views and academic insights for effective guidance.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASSWORD VISIBILITY LOGIC (FIXED & STABLE) -->
+<script>
+  const pwdInput = document.getElementById("password");
+  const toggleBtn = document.getElementById("togglePwd");
+
+  let isVisible = false;
+  let autoHideTimer = null;
+
+  function hidePassword() {
+    pwdInput.type = "password";
+    toggleBtn.innerText = "Show";
+    isVisible = false;
+    clearTimeout(autoHideTimer);
+  }
+
+  function startAutoHideTimer() {
+    clearTimeout(autoHideTimer);
+    autoHideTimer = setTimeout(hidePassword, 10000); // 10 seconds
+  }
+
+  // Show / Hide button
+  toggleBtn.addEventListener("click", () => {
+    if (!isVisible) {
+      pwdInput.type = "text";
+      toggleBtn.innerText = "Hide";
+      isVisible = true;
+      startAutoHideTimer();
+    } else {
+      hidePassword();
+    }
+  });
+
+  // 🔥 FINAL FIX: typing immediately hides password
+  pwdInput.addEventListener("input", () => {
+    if (isVisible) {
+      hidePassword(); // instant hide on typing
+    }
+  });
+</script>
+  <script type="module" src="js/firebase.js"></script>
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>

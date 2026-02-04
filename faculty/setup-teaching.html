@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Setup Teaching Assignments | Edunova</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI, sans-serif;
+  background:#f5f7fb;
+}
+.container{
+  max-width:900px;
+  margin:30px auto;
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+}
+h2{
+  margin-top:0;
+}
+.row{
+  display:flex;
+  gap:15px;
+  flex-wrap:wrap;
+}
+.select-box{
+  flex:1;
+}
+select{
+  width:100%;
+  padding:10px;
+  font-size:15px;
+}
+button{
+  padding:10px 16px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+.add-btn{
+  background:#2563eb;
+  color:#fff;
+}
+.save-btn{
+  background:#16a34a;
+  color:#fff;
+  margin-top:15px;
+}
+.save-btn:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+}
+th,td{
+  padding:10px;
+  border-bottom:1px solid #e5e7eb;
+  text-align:left;
+}
+.remove{
+  color:red;
+  cursor:pointer;
+}
+.note{
+  font-size:13px;
+  color:#555;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>Teaching Assignment Setup</h2>
+  <p class="note">
+    Select the classes and subjects you teach. You can add multiple assignments.
+  </p>
+
+  <div class="row">
+    <div class="select-box">
+      <label>Class</label>
+      <select id="classSelect">
+        <option value="">Select Class</option>
+      </select>
+    </div>
+
+    <div class="select-box">
+      <label>Subject</label>
+      <select id="subjectSelect" disabled>
+        <option value="">Select Subject</option>
+      </select>
+    </div>
+
+    <div>
+      <label>&nbsp;</label><br>
+      <button class="add-btn" type="button" onclick="addAssignment()">+ Add</button>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Class</th>
+        <th>Subject</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="assignmentTable"></tbody>
+  </table>
+
+  <button class="save-btn" id="saveBtn" type="button" onclick="saveAssignments()">
+    Save & Continue
+  </button>
+
+  <!-- Status / error messages -->
+  <p id="msg" class="note"></p>
+</div>
+
+<!-- Main Firebase-connected logic -->
+<script type="module" src="./setup-teaching.js"></script>
+</body>
+</html>

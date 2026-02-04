@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edunova – Mentor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="icon" href="../images/logo.png">
+</head>
+
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+
+  <div class="brand">
+    <img src="../images/logo.png" class="logo" alt="Edunova">
+    <span>Edunova – Mentor</span>
+  </div>
+
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <a class="active" onclick="showSection('dashboard')">Dashboard</a>
+    <a onclick="showSection('students')">My Students</a>
+    <a onclick="showSection('createStudent')">Create Student</a>
+    <a onclick="showSection('attendance')">Attendance Verification</a>
+    <a onclick="showSection('marks')">Mark Verification</a>
+    <a onclick="showSection('results')">Result Analysis</a>
+    <a onclick="showSection('profile')">Profile</a>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="card">
+      <h3>Welcome Mentor 👋</h3>
+      <p>Total Students: <b id="studentCount">0</b></p>
+    </div>
+
+    <!-- CREATE STUDENT -->
+    <div id="createStudent" class="card hidden">
+      <h3>Create Student</h3>
+
+      <div class="form-box">
+        <input id="cs_regno" placeholder="Register Number">
+        <input id="cs_name" placeholder="Student Name">
+        <input id="cs_password" placeholder="Password (manual or auto)">
+      </div>
+
+      <div class="form-box">
+        <button onclick="createStudent()">Create Student</button>
+        <button class="secondary" onclick="autoGenerateStudentPassword()">
+          Auto Generate Password
+        </button>
+      </div>
+
+      <p id="createStudentMsg"></p>
+    </div>
+
+    <!-- MY STUDENTS -->
+    <div id="students" class="card hidden">
+      <h3>My Students</h3>
+
+      <div class="form-box">
+        <input id="studentId" placeholder="Register No">
+        <input id="studentName" placeholder="Student Name">
+        <button onclick="addStudent()">Add Student</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Register No</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="studentList"></tbody>
+      </table>
+    </div>
+
+    <!-- ATTENDANCE -->
+    <div id="attendance" class="card hidden">
+      <h3>Attendance Verification</h3>
+
+      <div class="search-box">
+        <input id="attRegNo" placeholder="Register No">
+        <button onclick="loadAttendance()">Search</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Subject</th><th>Status</th></tr>
+        </thead>
+        <tbody id="attendanceList"></tbody>
+      </table>
+    </div>
+
+    <!-- MARKS -->
+    <div id="marks" class="card hidden">
+      <h3>Mark Verification</h3>
+
+      <div class="search-box">
+        <input id="markRegNo" placeholder="Register No">
+        <button onclick="loadMarks()">Search</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Subject</th><th>Marks</th></tr>
+        </thead>
+        <tbody id="markList"></tbody>
+      </table>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results" class="card hidden">
+      <h3>Result Analysis</h3>
+
+      <div class="search-box">
+        <input id="resRegNo" placeholder="Register No">
+        <button onclick="loadResult()">Search</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Subject</th><th>Marks</th><th>Result</th></tr>
+        </thead>
+        <tbody id="resultList"></tbody>
+      </table>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="profile" class="card hidden">
+      <h3>Profile</h3>
+      <p><b>Role:</b> Mentor / Class Teacher</p>
+    </div>
+
+  </div>
+</div>
+
+<script type="module" src="mentor.js"></script>
+</body>
+</html>

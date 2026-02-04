@@ -1,0 +1,36 @@
+{
+  "hosting": {
+    "site": "edunova-lite",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "**/*.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/hod",
+        "destination": "/hod/dashboard.html"
+      },
+      {
+        "source": "/hod/**",
+        "destination": "/hod/dashboard.html"
+      }
+    ]
+  }
+}

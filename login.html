@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Edunova Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI, sans-serif;
+  background:#f5f7fb;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.box{
+  background:#fff;
+  padding:30px;
+  border-radius:10px;
+  text-align:center;
+}
+button{
+  padding:12px 20px;
+  font-size:16px;
+  background:#2563eb;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>Edunova Portal</h2>
+  <p>Select your role to continue</p>
+
+  <button onclick="goFaculty()">Faculty Login</button>
+</div>
+
+<script>
+function goFaculty(){
+  window.location.href = "faculty/login.html";
+}
+</script>
+
+</body>
+</html>

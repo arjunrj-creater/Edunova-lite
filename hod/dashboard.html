@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HOD Dashboard | Edunova</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="../css/dashboard.css">
+</head>
+
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+
+  <div class="brand">
+    <img src="../images/logo.png" class="logo">
+    <span>Edunova – HOD</span>
+  </div>
+
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+
+    <div class="sidebar-header">
+      <img src="../images/logo.png" alt="Edunova">
+      <span>Edunova</span>
+    </div>
+
+    <a class="active" data-target="dashboard">Dashboard</a>
+    <a onclick="openProfile()">Profile</a>
+    <a data-target="mentor">Create Mentor</a>
+    <a data-target="faculty">Create Faculty</a>
+
+    <!-- ✅ NEW -->
+    <a data-target="studentApproval">Student Approval</a>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="card">
+      <h3>Welcome, HOD 👋</h3>
+      <p>You can manage mentors, faculty and academic structure from here.</p>
+
+      <div class="stats-container">
+        <div class="stat-box stat-faculty" onclick="openFacultyFromDashboard()" style="cursor:pointer">
+          <h2 id="facultyCount">0</h2>
+          <p>Total Faculty</p>
+        </div>
+
+        <div class="stat-box stat-mentor" onclick="openMentorFromDashboard()" style="cursor:pointer">
+          <h2 id="mentorCount">0</h2>
+          <p>Total Mentors</p>
+        </div>
+
+        <div class="stat-box stat-student">
+          <h2 id="studentCount">0</h2>
+          <p>Total Students</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="profile-page hidden" id="profileCard">
+      <iframe src="../common/profile.html" class="profile-iframe"></iframe>
+    </div>
+
+    <!-- CREATE MENTOR -->
+    <div id="mentor" class="card hidden">
+      <h3>Create Mentor</h3>
+
+      <div class="user-form">
+        <input id="mentorName" placeholder="Mentor Name">
+        <input id="mentorId" placeholder="Mentor ID">
+        <input id="mentorPass" placeholder="Password">
+        <button onclick="autoPassword('mentor')">Auto</button>
+        <button onclick="createMentor()">Create</button>
+      </div>
+
+      <h4 class="list-title">Current Mentors</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th><th>ID</th><th>Status</th><th>Password</th>
+          </tr>
+        </thead>
+        <tbody id="mentorList"></tbody>
+      </table>
+    </div>
+
+    <!-- CREATE FACULTY -->
+    <div id="faculty" class="card hidden">
+      <h3>Create Faculty</h3>
+
+      <div class="user-form">
+        <input id="facultyName" placeholder="Faculty Name">
+        <input id="facultyId" placeholder="Faculty ID">
+        <input id="facultyPass" placeholder="Password">
+        <button onclick="autoPassword('faculty')">Auto</button>
+        <button onclick="createFaculty()">Create</button>
+      </div>
+
+      <h4 class="list-title">Current Faculty</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th><th>ID</th><th>Status</th><th>Password</th>
+          </tr>
+        </thead>
+        <tbody id="facultyList"></tbody>
+      </table>
+    </div>
+
+    <!-- ✅ STUDENT APPROVAL (NEW) -->
+    <div id="studentApproval" class="card hidden">
+      <h3>Student Approval</h3>
+      <p>Approve students created by mentors</p>
+
+<div style="display:flex; gap:12px; align-items:center;">
+  <button onclick="approveAll()" class="primary-btn">
+    Approve All
+  </button>
+
+  <button onclick="openRevokeBox()" class="secondary-btn">
+    Revoke
+  </button>
+</div>
+<!-- Pending Students (Waiting for Approval) -->
+<table style="margin-top:20px;">
+  <thead>
+    <tr>
+      <th>Register No</th>
+      <th>Name</th>
+      <th>Mentor UID</th>
+    </tr>
+  </thead>
+  <tbody id="pendingList">
+    <!-- populated by approve-students.js -->
+  </tbody>
+</table>
+
+
+<!-- Revoke Box (hidden by default) -->
+<div id="revokeBox" class="revoke-box" style="display:none;">
+  <div class="revoke-header">
+    <h3>Revoke Students (Last 7 Days)</h3>
+    <button onclick="closeRevokeBox()">✕</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Register No</th>
+        <th>Name</th>
+        <th>Class</th>
+        <th>Approved On</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="revokeList"></tbody>
+  </table>
+</div>
+
+
+<!-- PROFILE OPEN FIX -->
+<script>
+function openProfile() {
+  document.querySelectorAll(".card").forEach(c => c.classList.add("hidden"));
+  document.getElementById("profileCard").classList.remove("hidden");
+  document.querySelectorAll(".sidebar a").forEach(a => a.classList.remove("active"));
+  if (typeof closeSidebar === "function") closeSidebar();
+}
+</script>
+
+<script type="module" src="../js/hod.js"></script>
+<script type="module" src="./approve-students.js"></script>
+</body>
+</html>
