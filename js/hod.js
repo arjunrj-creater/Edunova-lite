@@ -15,7 +15,9 @@ import {
   getDocs,
   query,
   where,
-  updateDoc
+  updateDoc,
+  arrayUnion,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* =====================
@@ -23,10 +25,11 @@ import {
 ===================== */
 let mentorCount = 0;
 let facultyCount = 0;
+let studentsCount = 0;
 
 let mentors = [];
 let faculties = [];
-let pendingStudents = [];
+let students = [];
 
 /* =====================
    SIDEBAR CONTROL
@@ -47,26 +50,52 @@ function closeSidebar(){
 /* =====================
    SIDEBAR NAVIGATION
 ===================== */
-document.querySelectorAll(".sidebar a").forEach(link => {
+/* =====================
+   SIDEBAR NAVIGATION (FIXED)
+===================== */
+document.querySelectorAll(".sidebar a[data-target]").forEach(link => {
   link.addEventListener("click", () => {
     const id = link.dataset.target;
-    if(!id) return;
+    const targetEl = document.getElementById(id);
 
-    document.querySelectorAll(".card").forEach(c => c.classList.add("hidden"));
-    document.getElementById(id).classList.remove("hidden");
+    if (!targetEl) {
+      console.warn("Sidebar target not found:", id);
+      return;
+    }
 
-    document.querySelectorAll(".sidebar a").forEach(a => a.classList.remove("active"));
+    // hide all cards
+    document.querySelectorAll(".card").forEach(c =>
+      c.classList.add("hidden")
+    );
+
+    // show selected
+    targetEl.classList.remove("hidden");
+
+    // active link
+    document.querySelectorAll(".sidebar a").forEach(a =>
+      a.classList.remove("active")
+    );
     link.classList.add("active");
 
     closeSidebar();
 
-    if (id === "studentApproval") loadPendingStudents();
+    if (id === "studentApproval") {
+      loadPendingStudents();
+    }
   });
 });
-
 function openProfile(){
-  document.querySelectorAll(".card").forEach(c => c.classList.add("hidden"));
+  document.querySelectorAll(".card").forEach(c =>
+    c.classList.add("hidden")
+  );
+
   document.getElementById("profileCard").classList.remove("hidden");
+
+  document.querySelectorAll(".sidebar a").forEach(a =>
+    a.classList.remove("active")
+  );
+
+  closeSidebar();
 }
 
 /* =====================
@@ -76,14 +105,22 @@ function openFacultyFromDashboard(){ openSection("faculty"); }
 function openMentorFromDashboard(){ openSection("mentor"); }
 
 function openSection(id){
-  document.querySelectorAll(".card").forEach(c => c.classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
+  const targetEl = document.getElementById(id);
+  if (!targetEl) {
+    console.warn("openSection target not found:", id);
+    return;
+  }
 
-  document.querySelectorAll(".sidebar a").forEach(a => {
-    a.classList.toggle("active", a.dataset.target === id);
-  });
+  document.querySelectorAll(".card").forEach(c =>
+    c.classList.add("hidden")
+  );
+
+  targetEl.classList.remove("hidden");
+
+  document.querySelectorAll(".sidebar a").forEach(a =>
+    a.classList.toggle("active", a.dataset.target === id)
+  );
 }
-
 /* =====================
    AUTO PASSWORD
 ===================== */
@@ -110,7 +147,7 @@ async function createMentor(){
     const cred = await createUserWithEmailAndPassword(auth, `${id}@edunova.com`, pass);
     const uid = cred.user.uid;
 
-    await setDoc(doc(db,"users",uid),{ name, role:"mentor", firstLogin:true });
+    await setDoc(doc(db,"users",uid),{ name, role:"mentor", mentorId:id, firstLogin:true });
     await setDoc(doc(db,"mentors",uid),{ name, mentorId:id });
 
     mentorName.value = mentorId.value = mentorPass.value = "";
@@ -123,7 +160,7 @@ async function createMentor(){
 ===================== */
 async function loadMentorsFromDB(){
   mentors=[]; mentorList.innerHTML="";
-  const snap = await getDocs(collection(db,"mentors"));
+  const snap = await getDocs(query(collection(db,"users"), where("role","==","mentor")));
   snap.forEach(d=>mentors.push(d.data()));
   document.getElementById("mentorCount").innerText = mentors.length;
   renderMentors();
@@ -132,8 +169,13 @@ async function loadMentorsFromDB(){
 function renderMentors(){
   mentorList.innerHTML="";
   mentors.forEach(m=>{
-    mentorList.innerHTML+=`
-      <tr><td>${m.name}</td><td>${m.mentorId}</td><td>Not Logged</td><td>****</td></tr>`;
+    mentorList.innerHTML += `
+      <tr>
+      <td>${m.name}</td>
+      <td>${m.mentorId}</td>
+      <td>${m.firstLogin === false ? "Active" : "Not Active"}</td>
+      <td>****</td>
+      </tr>`;
   });
 }
 
@@ -163,7 +205,7 @@ async function createFaculty(){
 ===================== */
 async function loadFacultyFromDB(){
   faculties=[]; facultyList.innerHTML="";
-  const snap = await getDocs(collection(db,"faculties"));
+  const snap = await getDocs(query(collection(db,"users"), where("role","==","faculty")));
   snap.forEach(d=>faculties.push(d.data()));
   document.getElementById("facultyCount").innerText = faculties.length;
   renderFaculty();
@@ -173,7 +215,7 @@ function renderFaculty(){
   facultyList.innerHTML="";
   faculties.forEach(f=>{
     facultyList.innerHTML+=`
-      <tr><td>${f.name}</td><td>${f.facultyId}</td><td>Not Logged</td><td>****</td></tr>`;
+      <tr><td>${f.name}</td><td>${f.facultyId}</td><td>${f.firstLogin === false ? "Active" : "Not Active"}</td><td>****</td></tr>`;
   });
 }
 
@@ -354,3 +396,52 @@ window.approveAllStudents = approveAllStudents;
 window.approveSingleStudent = approveSingleStudent;
 window.loadApprovedStudents = loadApprovedStudents;
 window.revokeStudent = revokeStudent;
+
+/* =====================
+   ADVANCE ALL STUDENTS SEMESTER
+   - increments `semester` (numeric) for every user with role 'student'
+   - archives previous semester values in `archivedSemesters`
+ ===================== */
+async function advanceAllSemesters(){
+  if(!confirm('Advance all students to next semester? This cannot be easily undone.')) return;
+
+  try{
+    const snap = await getDocs(query(collection(db,'users'), where('role','==','student')));
+    let updated = 0;
+
+    for(const d of snap.docs){
+      const data = d.data();
+      const ref = doc(db,'users', d.id);
+
+      // parse semester as number if possible
+      let sem = null;
+      if (data.semester === undefined || data.semester === null) {
+        sem = null;
+      } else if (typeof data.semester === 'number') {
+        sem = data.semester;
+      } else if (typeof data.semester === 'string') {
+        const m = data.semester.match(/\d+/);
+        sem = m ? parseInt(m[0],10) : null;
+      }
+
+      if (sem === null) continue; // skip users without semester
+
+      const nextSem = Math.min(8, sem + 1);
+
+      await updateDoc(ref, {
+        semester: nextSem,
+        archivedSemesters: arrayUnion(sem),
+        semesterUpdatedAt: serverTimestamp()
+      });
+
+      updated++;
+    }
+
+    alert(`Updated semester for ${updated} students`);
+  }catch(err){
+    console.error('Advance all semesters failed', err);
+    alert('Failed to advance semesters: ' + (err.message || err));
+  }
+}
+
+window.advanceAllSemesters = advanceAllSemesters;

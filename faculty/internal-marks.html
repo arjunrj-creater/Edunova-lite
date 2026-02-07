@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Internal Marks | Faculty</title>
+  <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+<div class="card">
+  <h3>Upload Internal Marks</h3>
+
+  <div class="form-box">
+    <label>Class</label>
+    <select id="classSelect"></select>
+  </div>
+
+  <div class="form-box">
+    <label>Subject</label>
+    <select id="subjectSelect"></select>
+  </div>
+
+  <div class="form-box">
+    <label>Maximum Marks</label>
+    <input type="number" id="maxMarks" placeholder="Eg: 50">
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Student ID</th>
+        <th>Name</th>
+        <th>Marks</th>
+      </tr>
+    </thead>
+    <tbody id="markTable"></tbody>
+  </table>
+
+  <button onclick="submitMarks()">Submit Marks</button>
+</div>
+
+<script type="module" src="internal-marks.js"></script>
+</body>
+</html>

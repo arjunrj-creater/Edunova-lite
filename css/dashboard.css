@@ -559,4 +559,66 @@ th {
   border-radius: 6px;
   cursor: pointer;
 }
+/* =========================
+   HOD UPLOAD IFRAME
+========================= */
+
+/* =========================
+   PROFILE & HOD UPLOAD FIX
+========================= */
+
+/* =================================================
+   FULL-PAGE IFRAME FIX (PROFILE + HOD UPLOAD)
+   NO DESIGN CHANGE, ONLY LAYOUT CORRECTION
+================================================= */
+
+/* Make these cards act like full pages */
+#profileCard,
+#hod-upload {
+  max-width: 100% !important;
+  padding: 0 !important;
+  height: calc(100vh - 120px); /* topbar + main padding */
+  overflow: hidden;
+}
+
+/* Remove card look ONLY for iframe containers */
+#profileCard.card,
+#hod-upload.card {
+  box-shadow: none;
+  border-radius: 18px;
+  background: #fff;
+}
+
+/* Iframe should fill available space */
+.profile-iframe,
+.hodUploadCard {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+/* Prevent double scrolling */
+.main {
+  overflow: hidden;
+}
+
+/* Mobile correction */
+@media (max-width: 768px) {
+  #profileCard,
+  #hod-upload {
+    height: calc(100vh - 90px);
+  }
+
+  .main {
+    overflow: auto;
+  }
+}
+/* =====================
+   UPLOAD PAGE FIX
+===================== */
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
 

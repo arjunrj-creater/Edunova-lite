@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Attendance | Edunova – Faculty</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="icon" href="../images/logo.png">
+
+<style>
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+  margin-bottom:20px;
+}
+.input-field{display:flex;flex-direction:column;}
+.input-field label{font-size:13px;margin-bottom:6px;color:#555;}
+.input-field select,
+.input-field input{
+  padding:10px;
+  border:1px solid #d1d5db;
+  border-radius:6px;
+  font-size:14px;
+}
+.table-wrapper{overflow-x:auto;margin-top:10px;}
+table{width:100%;border-collapse:collapse;}
+th{background:#f1f5f9;padding:10px;border-bottom:2px solid #cbd5e1;}
+td{padding:10px;border-bottom:1px solid #e2e8f0;}
+td input{width:100%;padding:6px;}
+.alert{padding:12px;border-radius:6px;margin-bottom:16px;display:none;}
+.alert.show{display:block;}
+.alert-success{background:#dcfce7;color:#166534;}
+.alert-danger{background:#fee2e2;color:#991b1b;}
+.alert-info{background:#e0f2fe;color:#075985;}
+</style>
+</head>
+
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  <div class="brand">
+    <img src="../images/logo.png" class="logo">
+    <span>Edunova – Faculty</span>
+  </div>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="../images/logo.png">
+      <span>Edunova</span>
+    </div>
+    <a href="dashboard.html">Dashboard</a>
+    <a class="active">Attendance</a>
+    <a href="marks.html">Internal Marks</a>
+    <a href="profile.html">Profile</a>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="card">
+      <h3>Upload Attendance</h3>
+      <p class="note">Select your assigned class and subject</p>
+
+      <div id="alert" class="alert"></div>
+
+      <!-- CLASS / SUBJECT -->
+      <div class="form-grid">
+        <div class="input-field">
+          <label>Class</label>
+          <select id="classSelect">
+            <option value="">Select Class</option>
+          </select>
+        </div>
+
+        <div class="input-field">
+          <label>Subject</label>
+          <select id="subjectSelect" disabled>
+            <option value="">Select Subject</option>
+          </select>
+        </div>
+
+        <div class="input-field">
+          <label>Total Classes Held</label>
+          <input type="number" id="totalClasses" min="1">
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>S.No</th>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Attended</th>
+              <th>%</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rowCount">Total Rows: 0</p>
+
+      <div style="margin-top:20px;display:flex;gap:12px;">
+        <button class="primary-btn" onclick="submitAttendance()">Submit Attendance</button>
+        <button class="danger-btn" onclick="resetForm()">Reset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🔥 FIREBASE + STUDENT AUTO LOAD (ONLY ADDITION) -->
+<script type="module">
+import { auth, db } from "../js/firebase.js";
+import { onAuthStateChanged } from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { doc, getDoc, collection, getDocs } from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const classSelect = document.getElementById("classSelect");
+const subjectSelect = document.getElementById("subjectSelect");
+const tableBody = document.getElementById("tableBody");
+const rowCount = document.getElementById("rowCount");
+
+let assignments = [];
+let classMap = {};
+let subjectMap = [];
+
+onAuthStateChanged(auth, async (user)=>{
+  if(!user) return;
+
+  const facultySnap = await getDoc(doc(db,"faculties",user.uid));
+  assignments = facultySnap.data().assignments || [];
+
+  const classSnap = await getDocs(collection(db,"classes"));
+  classSnap.forEach(d=>classMap[d.id]=d.data().name);
+
+  const subjectSnap = await getDocs(collection(db,"subjects"));
+  subjectSnap.forEach(d=>subjectMap[d.id]=d.data().name);
+
+  populateClasses();
+});
+
+function populateClasses(){
+  const unique=[...new Set(assignments.map(a=>a.classId))];
+  unique.forEach(cid=>{
+    const opt=document.createElement("option");
+    opt.value=cid;
+    opt.textContent=classMap[cid] || cid;
+    classSelect.appendChild(opt);
+  });
+}
+
+classSelect.addEventListener("change", async ()=>{
+  subjectSelect.innerHTML=`<option value="">Select Subject</option>`;
+  subjectSelect.disabled=true;
+  tableBody.innerHTML="";
+  rowCount.innerText="Total Rows: 0";
+
+  const classId = classSelect.value;
+  if(!classId) return;
+
+  assignments
+    .filter(a=>a.classId===classId)
+    .forEach(a=>{
+      const opt=document.createElement("option");
+      opt.value=a.subjectId;
+      opt.textContent=subjectMap[a.subjectId] || a.subjectId;
+      subjectSelect.appendChild(opt);
+    });
+
+  subjectSelect.disabled=false;
+
+  // 🔥 LOAD STUDENTS FROM FIRESTORE (FIXED)
+  const snap = await getDocs(collection(db,"students"));
+  let i=1;
+
+  snap.forEach(docSnap=>{
+    const s = docSnap.data();
+    if(s.classId === classId){
+      tableBody.innerHTML += `
+        <tr>
+          <td>${i++}</td>
+          <td>${s.student_id}</td>
+          <td>${s.student_name}</td>
+          <td>
+  <input
+    type="number"
+    min="0"
+    class="attended"
+    oninput="updateAttendancePercent(this)"
+  >
+</td>
+          <td class="percent">–</td>
+        </tr>
+      `;
+    }
+  });
+
+  rowCount.innerText = `Total Rows: ${i-1}`;
+});
+</script>
+
+<!-- 🔒 ORIGINAL ATTENDANCE LOGIC (UNCHANGED) -->
+<script src="../js/firebase.js"></script>
+<script>
+/* Your existing submitAttendance(), validation, % calculation logic
+   remains exactly as-is */
+</script>
+<script>
+function updateAttendancePercent(input) {
+  const total = document.getElementById("totalClasses").value;
+
+  if (!total || total <= 0) {
+    return;
+  }
+
+  const attended = parseInt(input.value || 0);
+  const percentCell = input.closest("tr").querySelector(".percent");
+
+  const percentage = ((attended / total) * 100).toFixed(2);
+  percentCell.innerText = percentage + "%";
+}
+
+// Auto-recalculate all when total classes changes
+document.getElementById("totalClasses").addEventListener("input", () => {
+  document.querySelectorAll(".attended").forEach(input => {
+    updateAttendancePercent(input);
+  });
+});
+</script>
+<script type="module">
+import { db } from "../js/firebase.js";
+import {
+  collection,
+  addDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+window.submitAttendance = async function () {
+  const classId = document.getElementById("classSelect").value;
+  const subjectId = document.getElementById("subjectSelect").value;
+  const totalClasses = parseInt(
+    document.getElementById("totalClasses").value,
+    10
+  );
+
+  if (!classId || !subjectId) {
+    showAlert("Please select class and subject", "danger");
+    return;
+  }
+
+  if (!totalClasses || totalClasses <= 0) {
+    showAlert("Enter valid total classes", "danger");
+    return;
+  }
+
+  const rows = document.querySelectorAll("#tableBody tr");
+  if (rows.length === 0) {
+    showAlert("No students found", "danger");
+    return;
+  }
+
+  const students = [];
+
+  rows.forEach(row => {
+    const studentId = row.children[1].innerText.trim();
+    const studentName = row.children[2].innerText.trim();
+    const attendedInput = row.querySelector(".attended");
+    const attended = parseInt(attendedInput.value || 0, 10);
+    const percentText = row.querySelector(".percent").innerText;
+
+    students.push({
+      studentId,
+      studentName,
+      attended,
+      percentage: parseFloat(percentText) || 0
+    });
+  });
+
+  try {
+  await addDoc(collection(db, "attendance_records"), {
+  classId,
+  subjectId,
+  totalClasses,
+  students,
+  createdAt: serverTimestamp(),
+
+  // 🔥 IMPORTANT FLAGS
+  published: false,            // ⛔ student cannot see
+  verifiedByMentor: false,     // ⛔ not verified
+  mentorUid: null              // will be set on publish
+});
+
+
+    showAlert("Attendance submitted successfully ✅", "success");
+
+  } catch (err) {
+    console.error(err);
+    showAlert("Failed to submit attendance", "danger");
+  }
+};
+</script>
+<script>
+function showAlert(message, type) {
+  const alert = document.getElementById("alert");
+  alert.textContent = message;
+  alert.className = `alert alert-${type} show`;
+
+  setTimeout(() => {
+    alert.classList.remove("show");
+  }, 3000);
+}
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Verification - Student</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .student-info {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .info-card {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            color: white;
+        }
+
+        .info-card h3 {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .info-card p {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .filters {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .filter-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-filter {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-filter:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .attendance-list {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .attendance-item {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 150px;
+            gap: 20px;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .attendance-item:hover {
+            background: #f9f9f9;
+        }
+
+        .attendance-item:last-child {
+            border-bottom: none;
+        }
+
+        .subject-info h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .subject-info p {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .attendance-summary {
+            display: flex;
+            gap: 20px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-item .label {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .summary-item .value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .summary-item.attended {
+            color: #51cf66;
+        }
+
+        .summary-item.percentage {
+            color: #667eea;
+        }
+
+        .btn-details {
+            padding: 10px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-details:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 22px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .detailed-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .detailed-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .detailed-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detailed-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .status-present {
+            background: #d4edda;
+            color: #155724;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-absent {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #51cf66, #40c057);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        @media (max-width: 1024px) {
+            .attendance-item {
+                grid-template-columns: 1fr;
+            }
+
+            .student-info {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column;
+            }
+
+            .filter-group {
+                width: 100%;
+                min-width: auto;
+            }
+
+            .btn-filter {
+                width: 100%;
+            }
+
+            .attendance-item {
+                padding: 15px;
+                gap: 10px;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+
+            .detailed-table {
+                font-size: 13px;
+            }
+
+            .detailed-table th,
+            .detailed-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📋 Attendance Verification</h1>
+            <p>Check your attendance records and detailed view by subject</p>
+        </div>
+
+        <!-- Student Info Cards -->
+        <div class="student-info">
+            <div class="info-card">
+                <h3>Student Name</h3>
+                <p id="studentName">Loading...</p>
+            </div>
+            <div class="info-card">
+                <h3>Roll Number</h3>
+                <p id="studentRoll">Loading...</p>
+            </div>
+            <div class="info-card">
+                <h3>Semester</h3>
+                <p id="studentSemester">Loading...</p>
+            </div>
+        </div>
+
+        <!-- Alert -->
+        <div id="alert" class="alert alert-info"></div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label>Select Semester</label>
+                <select id="semesterFilter" onchange="filterAttendance()">
+                    <option value="">All Semesters</option>
+                </select>
+            </div>
+            <button class="btn-filter" onclick="resetFilters()">🔄 Reset Filters</button>
+        </div>
+
+        <!-- Attendance List -->
+        <div class="attendance-list" id="attendanceList">
+            <div class="empty-state">
+                <h3>📭 No Attendance Records Found</h3>
+                <p>Your attendance records will appear here once faculty uploads them.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Attendance Details</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody">
+                <table class="detailed-table">
+                    <thead>
+                        <tr>
+                            <th>Session</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/firebase.js"></script>
+    <script>
+        let currentStudentData = {};
+        let allAttendanceData = [];
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadStudentData();
+            await loadAttendanceRecords();
+            populateSemesterFilter();
+        });
+
+        async function loadStudentData() {
+            try {
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    window.location.href = '../login.html';
+                    return;
+                }
+
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (userDoc.exists) {
+                    currentStudentData = userDoc.data();
+                    document.getElementById('studentName').textContent = currentStudentData.name || 'N/A';
+                    document.getElementById('studentRoll').textContent = currentStudentData.rollNumber || 'N/A';
+                    document.getElementById('studentSemester').textContent = currentStudentData.semester || 'N/A';
+                }
+            } catch (error) {
+                console.error('Error loading student data:', error);
+                showAlert('Error loading student information');
+            }
+        }
+
+       async function loadAttendanceRecords() {
+  try {
+    const studentId = currentStudentData.rollNumber; // or studentId
+    if (!studentId) return;
+
+    const snap = await db
+      .collection("attendance_records")
+      .where("published", "==", true)
+      .get();
+
+    allAttendanceData = [];
+
+    snap.forEach(docSnap => {
+      const data = docSnap.data();
+      const students = data.students || [];
+
+      const match = students.find(s => s.studentId === studentId);
+      if (!match) return;
+
+      allAttendanceData.push({
+        id: docSnap.id,
+        semester: data.semester || "-",
+        subject: data.subjectId || "Subject",
+        subjectCode: data.subjectId,
+        totalClasses: data.totalClasses,
+        attended: match.attended,
+        percentage: match.percentage,
+        uploadDate: data.createdAt?.toDate?.() || null
+      });
+    });
+
+    displayAttendanceRecords();
+    populateSemesterFilter();
+
+  } catch (err) {
+    console.error("Student attendance load error:", err);
+    showAlert("Failed to load attendance records");
+  }
+}
+        function displayAttendanceRecords() {
+            const container = document.getElementById('attendanceList');
+
+            if (allAttendanceData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📭 No Attendance Records Found</h3>
+                        <p>Your attendance records will appear here once faculty uploads them.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            allAttendanceData.forEach(record => {
+                const percentageNum = parseFloat(record.percentage);
+                const percentageColor = percentageNum >= 75 ? '#51cf66' : percentageNum >= 50 ? '#ffa500' : '#ff6b6b';
+
+                html += `
+                    <div class="attendance-item">
+                        <div class="subject-info">
+                            <h3>${record.subject}</h3>
+                            <p>Code: ${record.subjectCode} | Semester: ${record.semester}</p>
+                        </div>
+                        <div class="attendance-summary">
+                            <div class="summary-item attended">
+                                <div class="label">Classes Attended</div>
+                                <div class="value">${record.attended}/${record.totalClasses}</div>
+                            </div>
+                            <div class="summary-item percentage">
+                                <div class="label">Attendance %</div>
+                                <div class="value" style="color: ${percentageColor};">${record.percentage}</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${percentageNum}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-details" onclick='viewDetails(${JSON.stringify(record).replace(/'/g, "&apos;")})'>
+                            View Details
+                        </button>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function populateSemesterFilter() {
+            const semesters = [...new Set(allAttendanceData.map(r => r.semester))].sort();
+            const select = document.getElementById('semesterFilter');
+
+            semesters.forEach(sem => {
+                const option = document.createElement('option');
+                option.value = sem;
+                option.textContent = `Semester ${sem}`;
+                select.appendChild(option);
+            });
+        }
+
+        function filterAttendance() {
+            const semester = document.getElementById('semesterFilter').value;
+
+            if (!semester) {
+                displayAttendanceRecords();
+                return;
+            }
+
+            const filtered = allAttendanceData.filter(r => r.semester === semester);
+            const container = document.getElementById('attendanceList');
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📭 No Records Found</h3>
+                        <p>No attendance records found for Semester ${semester}.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(record => {
+                const percentageNum = parseFloat(record.percentage);
+                const percentageColor = percentageNum >= 75 ? '#51cf66' : percentageNum >= 50 ? '#ffa500' : '#ff6b6b';
+
+                html += `
+                    <div class="attendance-item">
+                        <div class="subject-info">
+                            <h3>${record.subject}</h3>
+                            <p>Code: ${record.subjectCode} | Semester: ${record.semester}</p>
+                        </div>
+                        <div class="attendance-summary">
+                            <div class="summary-item attended">
+                                <div class="label">Classes Attended</div>
+                                <div class="value">${record.attended}/${record.totalClasses}</div>
+                            </div>
+                            <div class="summary-item percentage">
+                                <div class="label">Attendance %</div>
+                                <div class="value" style="color: ${percentageColor};">${record.percentage}</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${percentageNum}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-details" onclick='viewDetails(${JSON.stringify(record).replace(/'/g, "&apos;")})'>
+                            View Details
+                        </button>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function viewDetails(record) {
+            document.getElementById('modalTitle').textContent = `${record.subject} - Full Attendance Details`;
+            
+            const tbody = document.getElementById('detailsTableBody');
+            tbody.innerHTML = '';
+
+            // Generate sample session data (in real app, this would come from backend)
+            const sessionsPerClass = Math.max(1, Math.floor(record.totalClasses / 10));
+            
+            for (let i = 1; i <= record.totalClasses; i++) {
+                const isAttended = Math.random() < (parseFloat(record.attended) / record.totalClasses);
+                const date = new Date();
+                date.setDate(date.getDate() - (record.totalClasses - i));
+
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>Class ${i}</td>
+                    <td>${date.toLocaleDateString('en-IN')}</td>
+                    <td>
+                        <span class="status-${isAttended ? 'present' : 'absent'}">
+                            ${isAttended ? '✓ Present' : '✗ Absent'}
+                        </span>
+                    </td>
+                `;
+            }
+
+            document.getElementById('detailsModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('detailsModal').classList.remove('show');
+        }
+
+        function resetFilters() {
+            document.getElementById('semesterFilter').value = '';
+            displayAttendanceRecords();
+        }
+
+        function showAlert(message) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.classList.add('show');
+
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 3000);
+        }
+
+        // Close modal on background click
+        window.onclick = function(event) {
+            const modal = document.getElementById('detailsModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

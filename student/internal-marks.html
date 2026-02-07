@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Internal Marks | Edunova – Student</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="icon" href="../images/logo.png">
+
+<style>
+.card-block{margin-bottom:25px;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th,td{padding:8px;border-bottom:1px solid #e5e7eb;}
+th{background:#f1f5f9;}
+.badge-approved{
+  background:#dcfce7;
+  color:#166534;
+  padding:4px 10px;
+  border-radius:12px;
+  font-size:12px;
+}
+.total{
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  <div class="brand">
+    <img src="../images/logo.png" class="logo">
+    <span>Edunova – Student</span>
+  </div>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <img src="../images/logo.png">
+      <span>Edunova</span>
+    </div>
+    <a href="dashboard.html">Dashboard</a>
+    <a class="active">Internal Marks</a>
+    <a href="profile.html">Profile</a>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="card">
+      <h3>Your Internal Marks</h3>
+      <p class="note">Only mentor-approved marks are shown</p>
+
+      <div id="marksContainer"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { auth, db } from "../js/firebase.js";
+import { onAuthStateChanged } from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  collection, query, where, getDocs
+} from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const container = document.getElementById("marksContainer");
+
+onAuthStateChanged(auth, async user=>{
+  if(!user) return;
+
+  // 🔹 get student profile
+  const studentSnap = await getDocs(
+    query(collection(db,"students"), where("uid","==",user.uid))
+  );
+
+  if(studentSnap.empty){
+    container.innerHTML="<p>No student record found</p>";
+    return;
+  }
+
+  const student = studentSnap.docs[0].data();
+
+  // 🔹 get approved marks
+  const q = query(
+    collection(db,"internal_marks"),
+    where("classId","==",student.classId),
+    where("status","==","approved")
+  );
+
+  const snap = await getDocs(q);
+
+  if(snap.empty){
+    container.innerHTML="<p>No internal marks published yet</p>";
+    return;
+  }
+
+  snap.forEach(doc=>{
+    const data = doc.data();
+    renderMarks(data, student.student_id);
+  });
+});
+
+function renderMarks(data, studentId){
+  const s = data.students.find(st => st.studentId === studentId);
+  if(!s) return;
+
+  container.innerHTML += `
+    <div class="card-block">
+      <h4>
+        Subject: ${data.subjectId}
+        <span class="badge-approved">Approved</span>
+      </h4>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Internal 1</th>
+            <th>Internal 2</th>
+            <th>Assignment</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>${s.internal1}</td>
+            <td>${s.internal2}</td>
+            <td>${s.assignment}</td>
+            <td class="total">${s.total}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>

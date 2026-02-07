@@ -72,6 +72,52 @@ th,td{
   color:#555;
   margin-top:10px;
 }
+.search-box {
+  position: relative;
+  width: 100%;
+}
+.search-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.search-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 4px rgba(37, 99, 235, 0.3);
+}
+.dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  display: none;
+  z-index: 1000;
+}
+.dropdown-list.show {
+  display: block;
+}
+.dropdown-item {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+}
+.dropdown-item:hover {
+  background-color: #f0f0f0;
+}
+.dropdown-item.selected {
+  background-color: #2563eb;
+  color: #fff;
+}
 </style>
 </head>
 
@@ -86,16 +132,31 @@ th,td{
   <div class="row">
     <div class="select-box">
       <label>Class</label>
-      <select id="classSelect">
-        <option value="">Select Class</option>
-      </select>
+      <div class="search-box">
+        <input 
+          type="text" 
+          id="classInput" 
+          class="search-input" 
+          placeholder="Search or select class..."
+          autocomplete="off"
+        >
+        <div id="classDropdown" class="dropdown-list"></div>
+      </div>
     </div>
 
     <div class="select-box">
       <label>Subject</label>
-      <select id="subjectSelect" disabled>
-        <option value="">Select Subject</option>
-      </select>
+      <div class="search-box">
+        <input 
+          type="text" 
+          id="subjectInput" 
+          class="search-input" 
+          placeholder="Search or select subject..."
+          autocomplete="off"
+          disabled
+        >
+        <div id="subjectDropdown" class="dropdown-list"></div>
+      </div>
     </div>
 
     <div>

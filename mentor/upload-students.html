@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Students | Edunova</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="icon" href="../images/logo.png">
+
+  <!-- SheetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+
+<body style="background:transparent;">
+
+<main class="container">
+
+  <!-- UPLOAD -->
+  <section class="card">
+    <h3>Upload Student Details</h3>
+
+    <input type="file" id="excelFile" accept=".xlsx" />
+
+    <p class="hint">
+      Excel must contain:<br>
+      student_id, student_name, email, phone, parent_phone, seat_type, status
+    </p>
+
+    <button id="previewBtn">Preview</button>
+  </section>
+
+  <!-- PREVIEW -->
+  <section class="card hidden" id="previewSection">
+    <h3>Preview Student Data</h3>
+
+    <div style="overflow:auto;">
+      <table id="previewTable">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:16px; display:flex; gap:12px;">
+      <button id="confirmBtn" disabled>Confirm & Save</button>
+      <button id="cancelBtn" class="secondary">Cancel</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="card hidden" id="resultSection">
+    <h3>Upload Result</h3>
+    <div id="resultTable"></div>
+  </section>
+
+</main>
+
+<script type="module" src="upload-students.js"></script>
+</body>
+</html>

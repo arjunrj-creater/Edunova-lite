@@ -5,6 +5,7 @@
 <title>HOD Dashboard | Edunova</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="../css/dashboard.css">
+<link rel="icon" href="../images/logo.png">
 </head>
 
 <body>
@@ -35,10 +36,11 @@
     </div>
 
     <a class="active" data-target="dashboard">Dashboard</a>
-    <a onclick="openProfile()">Profile</a>
+    <a data-target="profileCard">Profile</a>
     <a data-target="mentor">Create Mentor</a>
     <a data-target="faculty">Create Faculty</a>
-
+    <a data-target="hod-upload">Upload Academic Structure</a>
+    
     <!-- ✅ NEW -->
     <a data-target="studentApproval">Student Approval</a>
   </div>
@@ -69,9 +71,20 @@
       </div>
     </div>
 
+ <div class="card hidden" id="hod-upload">
+  <iframe src="hod-upload.html" class="hodUploadCard"></iframe>
+</div>
+
+
     <!-- PROFILE -->
-    <div class="profile-page hidden" id="profileCard">
-      <iframe src="../common/profile.html" class="profile-iframe"></iframe>
+    <div class="card hidden profile-page" id="profileCard">
+      <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;">
+        <iframe src="../common/profile.html" class="profile-iframe"></iframe>
+        <div style="display:flex;flex-direction:column;gap:8px;min-width:220px;margin-left:12px;">
+          <button onclick="advanceAllSemesters()" class="primary-btn">Advance All Students → Next Semester</button>
+          <small style="color:#666">This will increment `semester` on every user with role `student`. Previous semester values are archived.</small>
+        </div>
+      </div>
     </div>
 
     <!-- CREATE MENTOR -->
@@ -96,6 +109,7 @@
         <tbody id="mentorList"></tbody>
       </table>
     </div>
+
 
     <!-- CREATE FACULTY -->
     <div id="faculty" class="card hidden">
@@ -170,16 +184,6 @@
   </table>
 </div>
 
-
-<!-- PROFILE OPEN FIX -->
-<script>
-function openProfile() {
-  document.querySelectorAll(".card").forEach(c => c.classList.add("hidden"));
-  document.getElementById("profileCard").classList.remove("hidden");
-  document.querySelectorAll(".sidebar a").forEach(a => a.classList.remove("active"));
-  if (typeof closeSidebar === "function") closeSidebar();
-}
-</script>
 
 <script type="module" src="../js/hod.js"></script>
 <script type="module" src="./approve-students.js"></script>

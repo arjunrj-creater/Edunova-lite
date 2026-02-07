@@ -4,18 +4,16 @@ import { onAuthStateChanged, signOut } from
 import {
   collection,
   doc,
-  setDoc,
   getDocs,
   getDoc,
-  query,
-  where
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* ======================
    GLOBAL CONTEXT
 ====================== */
 let mentorUid = null;
-const classId = "CS_A_2025";
+let mentorClassId = null;
 
 /* ======================
    AUTH + PROFILE CHECK
@@ -28,19 +26,16 @@ onAuthStateChanged(auth, async user => {
 
   mentorUid = user.uid;
 
-  try {
-    const snap = await getDoc(doc(db, "mentors", mentorUid));
-    if (!snap.exists() || snap.data().profileCompleted !== true) {
-      location.replace("set-password.html");
-      return;
-    }
-
-    showSection("dashboard");
-    loadStudents();
-
-  } catch (err) {
-    console.error("Mentor profile check failed", err);
+  const mentorSnap = await getDoc(doc(db, "mentors", mentorUid));
+  if (!mentorSnap.exists() || mentorSnap.data().profileCompleted !== true) {
+    location.replace("set-password.html");
+    return;
   }
+
+  mentorClassId = mentorSnap.data().classId;
+
+  showSection("dashboard");
+  loadStudents();
 });
 
 /* ======================
@@ -68,131 +63,177 @@ window.closeSidebar = () => {
 };
 
 /* ======================
-   NAVIGATION (FIXED)
+   SECTION SWITCHING (FIXED)
 ====================== */
 window.showSection = function (id) {
-  document.querySelectorAll(".card").forEach(c =>
-    c.classList.add("hidden")
-  );
+  document.querySelectorAll(".main > .card")
+    .forEach(c => c.classList.add("hidden"));
 
-  const section = document.getElementById(id);
-  if (section) section.classList.remove("hidden");
+  document.getElementById(id)?.classList.remove("hidden");
 
-  document.querySelectorAll(".sidebar a").forEach(a =>
-    a.classList.remove("active")
-  );
+  document.querySelectorAll(".sidebar a")
+    .forEach(a => a.classList.remove("active"));
 
-  document.querySelectorAll(".sidebar a").forEach(a => {
-    if (a.getAttribute("onclick")?.includes(id)) {
-      a.classList.add("active");
-    }
-  });
+  const active = [...document.querySelectorAll(".sidebar a")]
+    .find(a => a.getAttribute("onclick")?.includes(id));
+  if (active) active.classList.add("active");
 
+  history.replaceState(null, "", "dashboard.html");
   closeSidebar();
 };
 
 /* ======================
-   LOAD STUDENTS
+   ✅ CREATE STUDENT FIX (MISSING LOGIC)
 ====================== */
-async function loadStudents() {
-  const studentList = document.getElementById("studentList");
-  const studentCount = document.getElementById("studentCount");
+window.handleActionChange = function () {
+  const action = document.getElementById("actionType").value;
 
-  if (!studentList || !mentorUid) return;
+  const selectSection = document.getElementById("selectStudentSection");
+  const createSection = document.getElementById("createNewStudentSection");
+  const passwordSelect = document.getElementById("passwordSectionSelect");
 
-  studentList.innerHTML = "";
+  // reset all
+  selectSection.style.display = "none";
+  createSection.style.display = "none";
+  passwordSelect.style.display = "none";
 
-  const snap = await getDocs(
-    query(
-      collection(db, "students"),
-      where("mentorUid", "==", mentorUid),
-      where("classId", "==", classId)
-    )
-  );
+  if (action === "select") {
+    selectSection.style.display = "block";
+  }
 
-  if (studentCount) studentCount.innerText = snap.size;
+  if (action === "create") {
+    createSection.style.display = "block";
+  }
+};
+
+/* ======================
+   STUDENT MODAL (BROWSE)
+====================== */
+window.openStudentDialog = async function () {
+  const modal = document.getElementById("studentModal");
+  const container = document.getElementById("studentListContainer");
+
+  modal.style.display = "flex";
+  container.innerHTML = "";
+
+  const snap = await getDocs(collection(db, "students"));
 
   snap.forEach(d => {
     const s = d.data();
-    studentList.innerHTML += `
+    container.innerHTML += `
+      <div
+        onclick="selectStudent('${s.student_id}', '${s.student_name}', '${s.email || "-"}', '${s.phone || "-"}')"
+        style="padding:10px;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer">
+        <b>${s.student_name}</b><br>
+        <small>${s.student_id}</small>
+      </div>
+    `;
+  });
+};
+
+window.closeStudentDialog = function () {
+  document.getElementById("studentModal").style.display = "none";
+};
+
+window.selectStudent = function (id, name, email, phone) {
+  document.getElementById("selectedStudentInfo").style.display = "block";
+  document.getElementById("passwordSectionSelect").style.display = "block";
+
+  document.getElementById("selectedId").innerText = id;
+  document.getElementById("selectedName").innerText = name;
+  document.getElementById("selectedEmail").innerText = email;
+  document.getElementById("selectedPhone").innerText = phone;
+
+  closeStudentDialog();
+};
+
+/* ======================
+   LOAD STUDENTS (TABLE)
+====================== */
+async function loadStudents() {
+  const list = document.getElementById("studentList");
+  const count = document.getElementById("studentCount");
+  if (!list || !count) return;
+
+  list.innerHTML = "";
+  const snap = await getDocs(collection(db, "students"));
+  count.innerText = snap.size;
+
+  snap.forEach(d => {
+    const s = d.data();
+    list.innerHTML += `
       <tr>
-        <td>${s.name}</td>
-        <td>${s.studentId}</td>
-        <td>${s.active ? "Active" : "Inactive"}</td>
+        <td>${s.student_name || "-"}</td>
+        <td>${s.student_id || "-"}</td>
+        <td>
+          <button onclick="viewStudentDetails('${s.student_id}')">
+            View Details
+          </button>
+        </td>
       </tr>`;
   });
 }
 
 /* ======================
-   AUTO PASSWORD
+   VIEW STUDENT
 ====================== */
-window.autoGenerateStudentPassword = () => {
-  const reg = cs_regno.value.trim();
-  const name = cs_name.value.trim();
-
-  if (!reg || !name) {
-    alert("Enter Register No and Name first");
-    return;
-  }
-
-  cs_password.value =
-    name.substring(0, 3).toLowerCase() +
-    reg.slice(-3) +
-    "@123";
+window.viewStudentDetails = id => {
+  location.href = `student-details.html?id=${id}`;
 };
-
-/* ======================
-   CREATE STUDENT (FIXED)
-====================== */
-window.createStudent = async () => {
-  const regNo = cs_regno.value.trim();
-  const name = cs_name.value.trim();
-  const password = cs_password.value.trim();
-  const msgBox = document.getElementById("createStudentMsg");
-
-  msgBox.innerText = "";
-  msgBox.style.color = "red";
-
-  if (!regNo || !name) {
-    msgBox.innerText = "Register Number and Name are required";
-    return;
-  }
+window.createStudent = async function () {
+  console.clear();
+  console.log("🟢 createStudent() called");
 
   try {
-    /* Firestore student profile */
-await setDoc(doc(db, "students", regNo), {
-  studentId: regNo,
-  name,
-  classId,
-  mentorUid,
-  active: true,
-  authCreated: false,   // ✅ ADD THIS
-  createdAt: new Date(),
-  passwordHint: password || null
-});
+    const id = document.getElementById("newStudentId")?.value.trim();
+    const name = document.getElementById("newStudentName")?.value.trim();
+    const email = document.getElementById("newStudentEmail")?.value.trim();
+    const phone = document.getElementById("newStudentPhone")?.value.trim();
+    const parentPhone = document.getElementById("newParentPhone")?.value.trim();
+    const msg = document.getElementById("createStudentMsg");
 
+    if (!id || !name) {
+      msg.innerText = "Student ID and Name are required";
+      msg.style.color = "red";
+      console.error("❌ Validation failed");
+      return;
+    }
 
-    /* Firestore user profile (NOT Auth) */
-    await setDoc(doc(db, "users", regNo), {
-      role: "student",
-      firstLogin: true,
-      authCreated: false,   // 🔥 IMPORTANT FLAG
-      createdBy: mentorUid,
+    console.log("📦 Student Data:", {
+      id,
+      name,
+      email,
+      phone,
+      parentPhone,
+      classId: mentorClassId
+    });
+
+    await addDoc(collection(db, "students"), {
+      student_id: id,
+      student_name: name,
+      email: email || "",
+      phone: phone || "",
+      parent_phone: parentPhone || "",
+      classId: mentorClassId,
       createdAt: new Date()
     });
 
-    msgBox.style.color = "green";
-    msgBox.innerText =
-      "Student created. Auth account must be created by HOD/Admin.";
+    msg.innerText = "✅ Student created successfully";
+    msg.style.color = "green";
 
-    cs_regno.value = "";
-    cs_name.value = "";
-    cs_password.value = "";
+    console.log("✅ Student saved to Firestore");
+
+    // reset form
+    document.getElementById("newStudentId").value = "";
+    document.getElementById("newStudentName").value = "";
+    document.getElementById("newStudentEmail").value = "";
+    document.getElementById("newStudentPhone").value = "";
+    document.getElementById("newParentPhone").value = "";
 
     loadStudents();
 
   } catch (err) {
-    console.error(err);
-    msgBox.innerText = "Failed to create student";
+    console.error("🔥 Create student failed:", err);
+    alert("Create student failed. Check console.");
   }
 };

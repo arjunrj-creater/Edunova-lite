@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Verify Internal Marks | Edunova – Mentor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="icon" href="../images/logo.png">
+
+<style>
+.card-block{margin-bottom:25px;}
+.badge{
+  padding:4px 10px;
+  border-radius:12px;
+  font-size:12px;
+}
+.badge-pending{background:#fde68a;color:#92400e;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th,td{padding:8px;border-bottom:1px solid #e5e7eb;}
+th{background:#f1f5f9;}
+.action-btns{margin-top:10px;display:flex;gap:10px;}
+</style>
+</head>
+
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  <div class="brand">
+    <img src="../images/logo.png" class="logo">
+    <span>Edunova – Mentor</span>
+  </div>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <img src="../images/logo.png">
+      <span>Edunova</span>
+    </div>
+    <a href="dashboard.html">Dashboard</a>
+    <a class="active">Internal Marks Approval</a>
+    <a href="profile.html">Profile</a>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="card">
+      <h3>Internal Marks Verification</h3>
+      <p class="note">Approve or reject internal marks submitted by faculty</p>
+
+      <div id="list"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { auth, db } from "../js/firebase.js";
+import { onAuthStateChanged } from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  collection, query, where, getDocs,
+  updateDoc, doc, serverTimestamp
+} from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const container = document.getElementById("list");
+
+onAuthStateChanged(auth, async user=>{
+  if(!user) return;
+
+  const q = query(
+    collection(db,"internal_marks"),
+    where("mentorUid","==",user.uid),
+    where("status","==","pending")
+  );
+
+  const snap = await getDocs(q);
+
+  if(snap.empty){
+    container.innerHTML="<p>No pending internal marks 🎉</p>";
+    return;
+  }
+
+  snap.forEach(d=>{
+    const data = d.data();
+    renderCard(d.id,data);
+  });
+});
+
+function renderCard(docId,data){
+  let rows="";
+  data.students.forEach(s=>{
+    rows+=`
+      <tr>
+        <td>${s.studentId}</td>
+        <td>${s.studentName}</td>
+        <td>${s.internal1}</td>
+        <td>${s.internal2}</td>
+        <td>${s.assignment}</td>
+        <td><b>${s.total}</b></td>
+      </tr>`;
+  });
+
+  container.innerHTML+=`
+    <div class="card-block">
+      <h4>
+        Class: ${data.classId} | Subject: ${data.subjectId}
+        <span class="badge badge-pending">Pending</span>
+      </h4>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Name</th>
+            <th>I-1</th><th>I-2</th>
+            <th>Assign</th><th>Total</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+
+      <div class="action-btns">
+        <button class="primary-btn" onclick="approve('${docId}')">Approve</button>
+        <button class="danger-btn" onclick="reject('${docId}')">Reject</button>
+      </div>
+    </div>
+  `;
+}
+
+window.approve = async (id)=>{
+  await updateDoc(doc(db,"internal_marks",id),{
+    status:"approved",
+    approvedAt: serverTimestamp()
+  });
+  location.reload();
+};
+
+window.reject = async (id)=>{
+  await updateDoc(doc(db,"internal_marks",id),{
+    status:"rejected"
+  });
+  location.reload();
+};
+</script>
+
+</body>
+</html>

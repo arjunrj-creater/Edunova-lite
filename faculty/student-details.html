@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Details | Edunova</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="icon" href="../images/logo.png">
+
+  <style>
+    body {
+      background: #f5f7fb;
+    }
+
+    .details-container {
+      max-width: 800px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .details-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 20px;
+    }
+
+    .details-header h2 {
+      margin: 0;
+      color: #1e293b;
+    }
+
+    .back-btn {
+      padding: 8px 16px;
+      background: #64748b;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .back-btn:hover {
+      background: #475569;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .detail-item {
+      padding: 15px;
+      background: #f8fafc;
+      border-radius: 6px;
+      border-left: 4px solid #3b82f6;
+    }
+
+    .detail-label {
+      font-size: 12px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
+    }
+
+    .detail-value {
+      font-size: 16px;
+      font-weight: 500;
+      color: #1e293b;
+      word-break: break-all;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="details-container">
+  <div class="details-header">
+    <h2>Student Details</h2>
+    <button class="back-btn" onclick="goBack()">← Back</button>
+  </div>
+
+  <div id="errorMsg" class="error" style="display: none;"></div>
+  <div id="loadingMsg" class="loading">Loading student details...</div>
+
+  <div id="detailsContent" style="display: none;">
+    <div class="details-grid">
+      <div class="detail-item">
+        <div class="detail-label">Student ID</div>
+        <div class="detail-value" id="studentId">-</div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-label">Student Name</div>
+        <div class="detail-value" id="studentName">-</div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-label">Email</div>
+        <div class="detail-value" id="studentEmail">-</div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-label">Phone</div>
+        <div class="detail-value" id="studentPhone">-</div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-label">Parent Phone</div>
+        <div class="detail-value" id="studentParentPhone">-</div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-label">Seat Type</div>
+        <div class="detail-value" id="studentSeatType">-</div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-label">Status</div>
+        <div class="detail-value" id="studentStatus">-</div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-label">Department</div>
+        <div class="detail-value" id="studentDepartment">-</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/faculty-student-details.js"></script>
+</body>
+
+</html>

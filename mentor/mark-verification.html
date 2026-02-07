@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mark Verification | Mentor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="icon" href="../images/logo.png">
+</head>
+
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  <div class="brand">
+    <img src="../images/logo.png" class="logo" alt="Edunova">
+    <span>Edunova – Mentor</span>
+  </div>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+<a href="dashboard.html">Dashboard</a>
+<a href="dashboard.html#students">My Students</a>
+<a href="dashboard.html#createStudent">Create Student</a>
+<a href="dashboard.html#uploadStudents">Upload Students</a>
+<a href="dashboard.html#attendance">Attendance Verification</a>
+<a class="active">Mark Verification</a>
+<a href="dashboard.html#results">Result Analysis</a>
+<a href="dashboard.html#profileCard">Profile</a>
+</div>
+
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="card">
+      <h3>Mark Verification</h3>
+      <p>Verify and publish internal marks uploaded by faculty</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Subject</th>
+            <th>Marks</th>
+            <th>%</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="markList">
+          <tr><td colspan="5">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ✅ IMPORTANT: NOT mentor.js -->
+<script type="module" src="mark-verification.js"></script>
+</body>
+</html>

@@ -5,7 +5,6 @@
   <title>Edunova – Mentor</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- CSS -->
   <link rel="stylesheet" href="../css/dashboard.css">
   <link rel="icon" href="../images/logo.png">
 </head>
@@ -24,7 +23,6 @@
   <button class="logout-btn" onclick="logout()">Logout</button>
 </div>
 
-<!-- OVERLAY -->
 <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
 <div class="layout">
@@ -34,13 +32,14 @@
     <a class="active" onclick="showSection('dashboard')">Dashboard</a>
     <a onclick="showSection('students')">My Students</a>
     <a onclick="showSection('createStudent')">Create Student</a>
-    <a onclick="showSection('attendance')">Attendance Verification</a>
-    <a onclick="showSection('marks')">Mark Verification</a>
+    <a onclick="showSection('uploadStudents')">Upload Students</a>
+    <a href="attendance-verification.html">Attendance Verification</a>
+    <a href="mark-verification.html">Mark Verification</a>
     <a onclick="showSection('results')">Result Analysis</a>
-    <a onclick="showSection('profile')">Profile</a>
+    <a onclick="showSection('profileCard')">Profile</a>
   </div>
 
-  <!-- MAIN CONTENT -->
+  <!-- MAIN -->
   <div class="main">
 
     <!-- DASHBOARD -->
@@ -49,103 +48,112 @@
       <p>Total Students: <b id="studentCount">0</b></p>
     </div>
 
-    <!-- CREATE STUDENT -->
+    <!-- CREATE STUDENT (✅ FIXED) -->
     <div id="createStudent" class="card hidden">
-      <h3>Create Student</h3>
+      <h3>Student Management</h3>
 
       <div class="form-box">
-        <input id="cs_regno" placeholder="Register Number">
-        <input id="cs_name" placeholder="Student Name">
-        <input id="cs_password" placeholder="Password (manual or auto)">
+        <label>Choose Action:</label>
+        <select id="actionType" onchange="handleActionChange()">
+          <option value="">-- Select --</option>
+          <option value="select">Browse Students</option>
+          <option value="create">Create New Student</option>
+        </select>
       </div>
 
-      <div class="form-box">
-        <button onclick="createStudent()">Create Student</button>
-        <button class="secondary" onclick="autoGenerateStudentPassword()">
-          Auto Generate Password
-        </button>
+      <!-- BROWSE STUDENTS -->
+      <div id="selectStudentSection" style="display:none;">
+        <button onclick="openStudentDialog()">Browse Students</button>
       </div>
 
-      <p id="createStudentMsg"></p>
+      <!-- CREATE NEW STUDENT -->
+      <div id="createNewStudentSection" style="display:none;">
+
+  <div class="form-box">
+    <label>Student ID / Register No</label>
+    <input id="newStudentId" placeholder="e.g. 23CS001">
+  </div>
+
+  <div class="form-box">
+    <label>Student Name</label>
+    <input id="newStudentName" placeholder="Student Name">
+  </div>
+
+  <div class="form-box">
+    <label>Email</label>
+    <input id="newStudentEmail" type="email" placeholder="student@email.com">
+  </div>
+<div class="form-box">
+  <label>Parent Phone</label>
+  <input
+    id="newParentPhone"
+    placeholder="Parent Phone Number"
+  >
+</div>
+
+  <div class="form-box">
+    <label>Phone</label>
+    <input id="newStudentPhone" placeholder="Phone Number">
+  </div>
+
+  <button onclick="createStudent()" class="primary-btn">
+    Create Student
+  </button>
+
+  <p id="createStudentMsg"></p>
+</div>
+
+
+      <!-- SELECTED STUDENT INFO -->
+      <div id="selectedStudentInfo" style="display:none;margin-top:20px;">
+        <p><b id="selectedName"></b></p>
+        <p>ID: <span id="selectedId"></span></p>
+        <p>Email: <span id="selectedEmail"></span></p>
+        <p>Phone: <span id="selectedPhone"></span></p>
+      </div>
+
+      <!-- PASSWORD -->
+      <div id="passwordSectionSelect" style="display:none;margin-top:20px;">
+        <input id="cs_passwordSelect" type="password" placeholder="Set Password">
+        <button onclick="setPasswordForStudent()">Set Password</button>
+      </div>
+    </div>
+
+    <!-- STUDENT MODAL -->
+    <div id="studentModal"
+         style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);
+                justify-content:center;align-items:center;">
+      <div style="background:#fff;padding:20px;border-radius:8px;width:400px;">
+        <h3>Select Student</h3>
+        <div id="studentListContainer"></div>
+        <button onclick="closeStudentDialog()">Close</button>
+      </div>
+    </div>
+
+    <!-- UPLOAD STUDENTS -->
+    <div id="uploadStudents" class="card hidden">
+      <iframe src="upload-students.html"
+              style="width:100%;height:600px;border:none;"></iframe>
     </div>
 
     <!-- MY STUDENTS -->
     <div id="students" class="card hidden">
       <h3>My Students</h3>
-
-      <div class="form-box">
-        <input id="studentId" placeholder="Register No">
-        <input id="studentName" placeholder="Student Name">
-        <button onclick="addStudent()">Add Student</button>
-      </div>
-
       <table>
         <thead>
           <tr>
             <th>Name</th>
-            <th>Register No</th>
-            <th>Status</th>
+            <th>Register No / Student ID</th>
+            <th>Details</th>
           </tr>
         </thead>
         <tbody id="studentList"></tbody>
       </table>
     </div>
 
-    <!-- ATTENDANCE -->
-    <div id="attendance" class="card hidden">
-      <h3>Attendance Verification</h3>
-
-      <div class="search-box">
-        <input id="attRegNo" placeholder="Register No">
-        <button onclick="loadAttendance()">Search</button>
-      </div>
-
-      <table>
-        <thead>
-          <tr><th>Subject</th><th>Status</th></tr>
-        </thead>
-        <tbody id="attendanceList"></tbody>
-      </table>
-    </div>
-
-    <!-- MARKS -->
-    <div id="marks" class="card hidden">
-      <h3>Mark Verification</h3>
-
-      <div class="search-box">
-        <input id="markRegNo" placeholder="Register No">
-        <button onclick="loadMarks()">Search</button>
-      </div>
-
-      <table>
-        <thead>
-          <tr><th>Subject</th><th>Marks</th></tr>
-        </thead>
-        <tbody id="markList"></tbody>
-      </table>
-    </div>
-
-    <!-- RESULTS -->
-    <div id="results" class="card hidden">
-      <h3>Result Analysis</h3>
-
-      <div class="search-box">
-        <input id="resRegNo" placeholder="Register No">
-        <button onclick="loadResult()">Search</button>
-      </div>
-
-      <table>
-        <thead>
-          <tr><th>Subject</th><th>Marks</th><th>Result</th></tr>
-        </thead>
-        <tbody id="resultList"></tbody>
-      </table>
-    </div>
-
     <!-- PROFILE -->
-    <div id="profile" class="card hidden">
-      <h3>Profile</h3>
-      <p><b>Role:</b> Mentor / Class Teacher</p>
+    <div id="profileCard" class="card hidden profile-page">
+      <iframe src="../common/profile.html" class="profile-iframe"></iframe>
     </div>
 
   </div>

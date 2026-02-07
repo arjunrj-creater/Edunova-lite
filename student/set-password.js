@@ -5,18 +5,29 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import {
+  collection,
+  query,
+  where,
+  getDocs,
   doc,
-  getDoc,
-  updateDoc,
+  setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* =====================
-   AUTH CHECK
+   GLOBALS
 ===================== */
 let currentUser = null;
-let studentId = null;
+let allClasses = [];
+let studentDocRef = null;
 
+const msg = document.getElementById("msg");
+const saveBtn = document.getElementById("saveBtn");
+const classSelect = document.getElementById("classSelect");
+
+/* =====================
+   AUTH CHECK
+===================== */
 onAuthStateChanged(auth, async user => {
   if (!user) {
     location.replace("../index.html");
@@ -25,28 +36,73 @@ onAuthStateChanged(auth, async user => {
 
   currentUser = user;
 
-  // 🔥 get studentId from USERS collection
-  const userSnap = await getDoc(doc(db, "users", user.uid));
-  if (!userSnap.exists()) {
-    alert("User profile missing");
-    return;
-  }
-
-  studentId = userSnap.data().studentId;
+  await findStudentDocument(); // 🔥 IMPORTANT
+  loadClasses();
 });
 
 /* =====================
-   SET PASSWORD
+   FIND STUDENT DOC
 ===================== */
-document.getElementById("saveBtn").addEventListener("click", async () => {
-  const pass = newPassword.value.trim();
-  const confirm = confirmPassword.value.trim();
-  const msg = document.getElementById("msg");
+async function findStudentDocument() {
+  const q = query(
+    collection(db, "students"),
+    where("authUid", "==", currentUser.uid)
+  );
+
+  const snap = await getDocs(q);
+
+  if (snap.empty) {
+    throw new Error("Student record not found. Contact admin.");
+  }
+
+  // There will be only ONE document
+  studentDocRef = doc(db, "students", snap.docs[0].id);
+}
+
+/* =====================
+   LOAD CLASSES
+===================== */
+async function loadClasses() {
+  classSelect.innerHTML = "<option value=''>Loading classes...</option>";
+
+  try {
+    const snap = await getDocs(collection(db, "classes"));
+    allClasses = [];
+
+    snap.forEach(d => {
+      allClasses.push({
+        id: d.id,
+        ...d.data()
+      });
+    });
+
+    classSelect.innerHTML = "<option value=''>Select a class</option>";
+
+    allClasses.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = c.name || c.classCode || c.id;
+      classSelect.appendChild(opt);
+    });
+
+  } catch (err) {
+    console.error(err);
+    msg.innerText = "Failed to load classes";
+  }
+}
+
+/* =====================
+   SAVE PASSWORD
+===================== */
+saveBtn.addEventListener("click", async () => {
+  const classId = classSelect.value;
+  const pass = document.getElementById("newPassword").value.trim();
+  const confirmPass = document.getElementById("confirmPassword").value.trim();
 
   msg.innerText = "";
   msg.style.color = "red";
 
-  if (!pass || !confirm) {
+  if (!classId || !pass || !confirmPass) {
     msg.innerText = "All fields are required";
     return;
   }
@@ -56,29 +112,54 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
     return;
   }
 
-  if (pass !== confirm) {
+  if (pass !== confirmPass) {
     msg.innerText = "Passwords do not match";
     return;
   }
 
   try {
-    /* 🔐 Update AUTH password */
+    const selectedClass = allClasses.find(c => c.id === classId);
+    if (!selectedClass) {
+      msg.innerText = "Invalid class selected";
+      return;
+    }
+
+    /* ---------- UPDATE AUTH PASSWORD ---------- */
     await updatePassword(currentUser, pass);
 
-    /* 🧾 Update USERS */
-    await updateDoc(doc(db, "users", currentUser.uid), {
-      firstLogin: false,
-      passwordUpdatedAt: serverTimestamp()
-    });
-
-    /* 🧾 Update STUDENTS (IMPORTANT FIX) */
-    await updateDoc(doc(db, "students", studentId), {
+    /* ---------- BUILD STUDENT UPDATE ---------- */
+    const studentUpdate = {
+      classId,
+      profileCompleted: true,
       passwordSet: true,
-      updatedAt: serverTimestamp()
-    });
+      passwordSetDate: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+
+      ...(selectedClass.classCode && { classCode: selectedClass.classCode }),
+      ...(selectedClass.section && { section: selectedClass.section }),
+      ...(selectedClass.semester && { semester: selectedClass.semester }),
+      ...(selectedClass.department && { department: selectedClass.department }),
+      ...(selectedClass.classCode && selectedClass.section && {
+        class_section:
+          selectedClass.classCode + "-" + selectedClass.section
+      })
+    };
+
+    /* ---------- UPDATE STUDENT DOC (MERGE) ---------- */
+    await setDoc(studentDocRef, studentUpdate, { merge: true });
+
+    /* ---------- UPDATE USER META ---------- */
+    await setDoc(
+      doc(db, "users", currentUser.uid),
+      {
+        firstLogin: false,
+        passwordUpdatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
 
     msg.style.color = "green";
-    msg.innerText = "Password updated successfully! Redirecting...";
+    msg.innerText = "Password set successfully! Redirecting...";
 
     setTimeout(() => {
       location.replace("dashboard.html");
@@ -86,6 +167,6 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
 
   } catch (err) {
     console.error(err);
-    msg.innerText = err.message || "Failed to update password";
+    msg.innerText = err.message;
   }
 });

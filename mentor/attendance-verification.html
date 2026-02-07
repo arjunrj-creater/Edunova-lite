@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Attendance Verification | Edunova – Mentor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="icon" href="../images/logo.png" />
+
+  <style>
+    .card { margin-top: 20px; }
+    .controls {
+      display:flex;
+      gap:14px;
+      margin-bottom:16px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    select, input {
+      padding:10px;
+      border:1px solid #d1d5db;
+      border-radius:6px;
+      font-size:14px;
+    }
+    table {
+      width:100%;
+      border-collapse:collapse;
+    }
+    th, td {
+      padding:12px;
+      border-bottom:1px solid #e5e7eb;
+      font-size:14px;
+    }
+    th {
+      background:#f1f5f9;
+      text-align:left;
+    }
+    .btn {
+      padding:8px 16px;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:14px;
+      font-weight:600;
+    }
+    .btn-search {
+      background:#2563eb;
+      color:white;
+    }
+    .btn-verify {
+      background:#2563eb;
+      color:white;
+    }
+    .btn-publish {
+      background:#16a34a;
+      color:white;
+    }
+    .btn-search:hover { background:#1d4ed8; }
+    .btn-verify:hover { background:#1d4ed8; }
+    .btn-publish:hover { background:#15803d; }
+
+    .alert {
+      margin-bottom:14px;
+      padding:10px 14px;
+      border-radius:6px;
+      display:none;
+      font-size:14px;
+    }
+    .alert.show { display:block; }
+    .alert-info { background:#e0f2fe; color:#075985; }
+    .alert-success { background:#dcfce7; color:#166534; }
+  </style>
+</head>
+
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  <div class="brand">
+    <img src="../images/logo.png" class="logo" alt="Edunova">
+    <span>Edunova – Mentor</span>
+  </div>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="dashboard.html#students">My Students</a>
+    <a href="dashboard.html#createStudent">Create Student</a>
+    <a href="dashboard.html#uploadStudents">Upload Students</a>
+    <a class="active">Attendance Verification</a>
+    <a href="dashboard.html#marks">Mark Verification</a>
+    <a href="dashboard.html#results">Result Analysis</a>
+    <a href="dashboard.html#profileCard">Profile</a>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="card">
+      <h3>Attendance Verification</h3>
+      <p class="note">Verify and publish attendance uploaded by faculty</p>
+
+      <div id="alert" class="alert"></div>
+
+      <div class="controls">
+        <select id="subjectFilter">
+          <option value="">All Subjects</option>
+        </select>
+
+        <input
+          type="text"
+          id="studentSearch"
+          placeholder="Enter Student ID"
+        />
+
+        <button class="btn btn-search" onclick="searchStudents()">Search</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>S.No</th>
+            <th>Student ID</th>
+            <th>Name</th>
+            <th>Subject</th>
+            <th>Attended</th>
+            <th>%</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- 🔥 FIREBASE + LOGIC -->
+<script type="module">
+import { auth, db } from "../js/firebase.js";
+import { onAuthStateChanged } from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  doc, getDoc,
+  collection, getDocs,
+  query, where,
+  updateDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const tableBody = document.getElementById("tableBody");
+const subjectFilter = document.getElementById("subjectFilter");
+const alertBox = document.getElementById("alert");
+const searchInput = document.getElementById("studentSearch");
+
+let mentorUid = null;
+let mentorClassId = null;
+let attendanceDocs = [];
+
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    location.replace("../index.html");
+    return;
+  }
+
+  mentorUid = user.uid;
+
+  const mentorSnap = await getDoc(doc(db, "mentors", mentorUid));
+  if (!mentorSnap.exists()) {
+    location.replace("set-password.html");
+    return;
+  }
+
+  mentorClassId = mentorSnap.data().classId;
+  loadAttendance();
+});
+
+// 🔥 LOAD DATA ONCE
+async function loadAttendance() {
+  attendanceDocs = [];
+  tableBody.innerHTML = "";
+  subjectFilter.innerHTML = `<option value="">All Subjects</option>`;
+
+  const q = query(
+    collection(db, "attendance_records"),
+    where("classId", "==", mentorClassId),
+    where("published", "==", false)
+  );
+
+  const snap = await getDocs(q);
+  const subjectSet = new Set();
+
+  snap.forEach(d => {
+    const data = d.data();
+    attendanceDocs.push({ id: d.id, ...data });
+    subjectSet.add(data.subjectId);
+  });
+
+  subjectSet.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s;
+    opt.textContent = s;
+    subjectFilter.appendChild(opt);
+  });
+
+  renderTable();
+}
+
+// 🔍 SEARCH BUTTON ACTION
+window.searchStudents = function () {
+  renderTable();
+};
+
+// 🔁 SUBJECT FILTER CHANGE
+subjectFilter.addEventListener("change", renderTable);
+
+// ⌨️ ENTER KEY SEARCH
+searchInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") searchStudents();
+});
+
+function renderTable() {
+  tableBody.innerHTML = "";
+  let i = 1;
+
+  const subjectValue = subjectFilter.value;
+  const searchValue = searchInput.value.trim().toLowerCase();
+
+  attendanceDocs
+    .filter(r => !subjectValue || r.subjectId === subjectValue)
+    .forEach(record => {
+      record.students.forEach(s => {
+
+        if (
+          searchValue &&
+          !s.studentId.toLowerCase().includes(searchValue)
+        ) return;
+
+        tableBody.innerHTML += `
+          <tr>
+            <td>${i++}</td>
+            <td>${s.studentId}</td>
+            <td>${s.studentName}</td>
+            <td>${record.subjectId}</td>
+            <td>${s.attended}/${record.totalClasses}</td>
+            <td>${s.percentage}%</td>
+            <td>
+              ${
+                record.verifiedByMentor
+                  ? `<button class="btn btn-publish" onclick="publish('${record.id}')">Publish</button>`
+                  : `<button class="btn btn-verify" onclick="verify('${record.id}')">Verify</button>`
+              }
+            </td>
+          </tr>
+        `;
+      });
+    });
+
+  if (i === 1) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center;color:#6b7280;padding:20px;">
+          No students found
+        </td>
+      </tr>
+    `;
+  }
+}
+
+window.verify = async function (id) {
+  await updateDoc(doc(db, "attendance_records", id), {
+    verifiedByMentor: true,
+    mentorUid
+  });
+  showAlert("Attendance verified ✔", "info");
+  loadAttendance();
+};
+
+window.publish = async function (id) {
+  await updateDoc(doc(db, "attendance_records", id), {
+    published: true,
+    publishedAt: serverTimestamp()
+  });
+  showAlert("Attendance published 🎉", "success");
+  loadAttendance();
+};
+
+function showAlert(msg, type) {
+  alertBox.textContent = msg;
+  alertBox.className = `alert alert-${type} show`;
+  setTimeout(() => alertBox.classList.remove("show"), 2500);
+}
+</script>
+
+<script src="mentor.js"></script>
+</body>
+</html>

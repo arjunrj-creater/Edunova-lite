@@ -58,6 +58,23 @@ onAuthStateChanged(auth, async (user) => {
 
     populateClasses();
 
+    // Check if there's a section parameter in URL
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("section") === "students" && assignments.length > 0) {
+      // Auto-select first class and load students
+      const firstClassId = [...new Set(assignments.map(a => a.classId))][0];
+      classSelect.value = firstClassId;
+      classSelect.dispatchEvent(new Event("change"));
+      setTimeout(() => {
+        const firstSubjectId = assignments.find(a => a.classId === firstClassId)?.subjectId;
+        if (firstSubjectId) {
+          subjectSelect.value = firstSubjectId;
+          subjectSelect.dispatchEvent(new Event("change"));
+          setTimeout(() => viewStudentList(firstClassId), 300);
+        }
+      }, 300);
+    }
+
   } catch (err) {
     console.error(err);
   }
@@ -137,6 +154,7 @@ function loadContext(classId, subjectId) {
 
     <button onclick="goToAttendance()">Take Attendance</button>
     <button onclick="goToMarks()">Enter Marks</button>
+    <button onclick="viewStudentList('${classId}')">View Students</button>
   `;
 
   // context storage is OK
@@ -153,4 +171,55 @@ window.goToAttendance = function () {
 
 window.goToMarks = function () {
   location.href = "marks.html";
+};
+
+window.viewStudentList = async function (classId) {
+  try {
+    const studentsSnap = await getDocs(collection(db, "students"));
+    const students = [];
+
+    studentsSnap.forEach(doc => {
+      const student = doc.data();
+      if (student.class_section === classMap[classId] || student.semester === sessionStorage.getItem("selected_class")) {
+        students.push(student);
+      }
+    });
+
+    let studentTable = `
+      <h3>Students List</h3>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <thead>
+          <tr style="background: #f1f5f9;">
+            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #cbd5e1;">Name</th>
+            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #cbd5e1;">Register No</th>
+            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #cbd5e1;">Details</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    students.forEach(student => {
+      studentTable += `
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 10px;">${student.student_name || "-"}</td>
+          <td style="padding: 10px;">${student.student_id || "-"}</td>
+          <td style="padding: 10px;"><button onclick="viewFacultyStudentDetails('${student.student_id}')" style="padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">View Details</button></td>
+        </tr>
+      `;
+    });
+
+    studentTable += `
+        </tbody>
+      </table>
+    `;
+
+    content.innerHTML = studentTable;
+  } catch (err) {
+    console.error("Error loading student list:", err);
+    content.innerHTML = "<p style='color: red;'>Failed to load students</p>";
+  }
+};
+
+window.viewFacultyStudentDetails = function (studentId) {
+  window.location.href = `student-details.html?id=${studentId}`;
 };

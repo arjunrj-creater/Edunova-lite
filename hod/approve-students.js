@@ -60,9 +60,9 @@ async function loadPendingStudents() {
 
     list.innerHTML += `
       <tr>
-        <td>${s.studentId}</td>
-        <td>${s.name}</td>
-        <td>${s.mentorUid}</td>
+        <td>${s.student_id || s.studentId || "-"}</td>
+        <td>${s.student_name || s.name || "-"}</td>
+        <td>${s.mentorUid || "-"}</td>
       </tr>`;
   });
 }
@@ -82,8 +82,9 @@ window.approveAll = async () => {
 
       // 🔹 CREATE AUTH ONLY IF NOT EXISTS
       if (!authUid) {
-        const email = `${s.studentId}@edunova.com`;
-        const password = s.passwordHint || "Temp@123";
+        const studentId = s.student_id || s.studentId;
+        const email = `${studentId}@edunova.com`;
+        const password = s.password || s.passwordHint || "Temp@123";
 
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         authUid = cred.user.uid;
@@ -91,7 +92,7 @@ window.approveAll = async () => {
         // create users profile ONLY first time
         await setDoc(doc(db, "users", authUid), {
           role: "student",
-          studentId: s.studentId,
+          studentId: s.student_id || s.studentId,
           firstLogin: true,
           authCreated: true,
           revoked: false,
@@ -174,8 +175,8 @@ async function loadRevokeList() {
 
     list.innerHTML += `
       <tr>
-        <td>${s.studentId}</td>
-        <td>${s.name}</td>
+        <td>${s.student_id || s.studentId || "-"}</td>
+        <td>${s.student_name || s.name || "-"}</td>
         <td>${s.classId || "-"}</td>
         <td>${approvedDate.toLocaleDateString()}</td>
         <td>

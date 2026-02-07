@@ -1,73 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Student Dashboard | Edunova</title>
+  <meta charset="UTF-8">
+  <title>Edunova – Student</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="../css/dashboard_student.css">
-</head>
 
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="icon" href="../images/logo.png">
+</head>
 <body>
 
-<!-- TOP BAR -->
+<!-- TOPBAR -->
 <div class="topbar">
-  <button class="hamburger" onclick="toggleSidebar()">☰</button>
-  <span class="brand">Edunova – Student</span>
-  <button class="logout-btn" onclick="logout()">Logout</button>
-</div>
+  <button class="hamburger" id="menuBtn" aria-label="Open menu" onclick="toggleSidebar()">☰</button>
 
-<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+  <div class="brand">
+    <img src="../images/logo.png" class="logo" alt="Edunova">
+    <span>Edunova – Student</span>
+  </div>
+
+  <button class="logout-btn" id="logoutBtn">Logout</button>
+</div>
 
 <div class="layout">
 
-  <!-- SIDEBAR -->
-  <div class="sidebar" id="sidebar">
-
-    <!-- ❌ removed "Student" text -->
-    <a class="active" data-target="dashboard">Dashboard</a>
-    <a data-target="announcement">Announcements</a>
-    <a data-target="attendance">Attendance</a>
-    <a data-target="marks">Marks</a>
-    <a data-target="results">Results</a>
-    <a onclick="openProfile()">Profile</a>
-
-  </div>
-
-  <!-- MAIN CONTENT -->
-  <div class="main">
-
-    <div id="dashboard" class="card">
-      <h3>Welcome 👋</h3>
-      <p>Select an option from the sidebar</p>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="../images/logo.png" alt="logo">
+      <span>Edunova</span>
     </div>
+    <a class="active" onclick="showSection('dashboard')">Dashboard</a>
+    <a onclick="showSection('attendance')">Attendance</a>
+    <a onclick="showSection('internalMarks')">Internal Marks</a>
+    <a onclick="showSection('profileCard')">Profile</a>
+  </aside>
 
-    <!-- ✅ ANNOUNCEMENT -->
-    <div id="announcement" class="card hidden">
-      <h3>📢 Announcements</h3>
-      <div id="announcementList">
-        <p>No announcements yet</p>
-      </div>
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <main class="main">
+    <div id="dashboard" class="card">
+      <h3 id="studentName">Welcome 👋</h3>
+      <p id="studentInfo">Department | Semester | Section</p>
     </div>
 
     <div id="attendance" class="card hidden">
       <h3>Attendance</h3>
+      <p id="attendanceSummary">Overall Attendance: --%</p>
+      <div id="attendanceDetails"></div>
     </div>
 
-    <div id="marks" class="card hidden">
-      <h3>Marks</h3>
+    <div id="internalMarks" class="card hidden">
+      <h3>Internal Marks</h3>
+      <p id="marksSummary">Marks will appear here</p>
     </div>
 
-    <div id="results" class="card hidden">
-      <h3>Results</h3>
+    <div id="subjects" class="card hidden">
+      <h3>Subjects</h3>
+      <div id="subjectsList">No subjects configured</div>
     </div>
 
-    <div id="profileCard" class="card hidden">
+    <div id="profileCard" class="card hidden profile-page">
       <iframe src="../common/profile.html" class="profile-iframe"></iframe>
     </div>
+  </main>
 
-  </div>
 </div>
 
-<script type="module" src="./dashboard.js"></script>
+<script type="module" src="js/dashboard.js"></script>
+<script src="js/layout.js"></script>
 </body>
 </html>

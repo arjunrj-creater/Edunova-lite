@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Upload Excel | Edunova</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Common CSS -->
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="icon" href="../images/logo.png">
+
+  <!-- SheetJS (ONLY ONCE) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+
+<body style="background:transparent;">
+
+  <!-- MAIN -->
+  <main class="container">
+
+    <!-- Upload Section -->
+ <section class="card">
+  <h3>Upload Academic Structure</h3>
+
+  <input type="file" id="excelFile" accept=".xlsx" />
+
+  <p class="hint">
+    Excel must contain:<br>
+    department_name, semester,
+    subject_code, subject_name, credits, status
+  </p>
+
+  <button id="previewBtn" type="button">Preview</button>
+
+  <div id="errorBox" class="error-text"></div>
+</section>
+
+    <!-- Preview Section -->
+    <section class="card hidden" id="previewSection">
+      <h3>Preview HOD Data</h3>
+
+      <div style="overflow:auto;">
+        <table id="previewTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:16px; display:flex; gap:12px;">
+        <button id="confirmBtn">Confirm & Save</button>
+        <button id="cancelBtn" class="secondary">Cancel</button>
+      </div>
+    </section>
+
+    <!-- Result -->
+    <section class="card hidden" id="resultSection">
+      <h3>Upload Result</h3>
+      <p id="resultText"></p>
+    </section>
+
+  </main>
+ <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script type="module" src="hod-upload.js"></script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Faculty Profile | Edunova</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="icon" href="../images/logo.png">
+
+<style>
+.profile-wrapper {
+  width: 100%;
+  height: calc(100vh - 70px);
+}
+
+.profile-wrapper iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= TOPBAR ================= -->
+<div class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+
+  <div class="brand">
+    <img src="../images/logo.png" class="logo">
+    <span>Edunova – Faculty</span>
+  </div>
+
+  <button class="logout-btn" id="logoutBtn">Logout</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="layout">
+
+  <!-- ================= SIDEBAR ================= -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="../images/logo.png">
+      <span>Edunova</span>
+    </div>
+
+    <a href="dashboard.html">Dashboard</a>
+    <a href="attendance-upload.html">Attendance</a>
+    <a href="marks.html">Internal Marks</a>
+    <a class="active">Profile</a>
+  </div>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+    <div class="card profile-wrapper">
+      <iframe src="../common/profile.html"></iframe>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================= AUTH ================= -->
+<script type="module">
+import { auth } from "../js/firebase.js";
+import { onAuthStateChanged, signOut } from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    location.replace("/index.html");
+  }
+});
+
+document.getElementById("logoutBtn").onclick = async () => {
+  await signOut(auth);
+  location.replace("/index.html");
+};
+</script>
+
+</body>
+</html>
