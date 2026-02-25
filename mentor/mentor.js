@@ -6,8 +6,13 @@ import {
   doc,
   getDocs,
   getDoc,
-  updateDoc
+  updateDoc,
+  addDoc,
+  setDoc,   // ✅ REQUIRED
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
 
 /* ======================
    GLOBAL CONTEXT
@@ -63,7 +68,7 @@ window.closeSidebar = () => {
 };
 
 /* ======================
-   SECTION SWITCHING (FIXED)
+   SECTION SWITCHING
 ====================== */
 window.showSection = function (id) {
   document.querySelectorAll(".main > .card")
@@ -83,7 +88,7 @@ window.showSection = function (id) {
 };
 
 /* ======================
-   ✅ CREATE STUDENT FIX (MISSING LOGIC)
+   CREATE STUDENT FLOW
 ====================== */
 window.handleActionChange = function () {
   const action = document.getElementById("actionType").value;
@@ -92,22 +97,16 @@ window.handleActionChange = function () {
   const createSection = document.getElementById("createNewStudentSection");
   const passwordSelect = document.getElementById("passwordSectionSelect");
 
-  // reset all
   selectSection.style.display = "none";
   createSection.style.display = "none";
   passwordSelect.style.display = "none";
 
-  if (action === "select") {
-    selectSection.style.display = "block";
-  }
-
-  if (action === "create") {
-    createSection.style.display = "block";
-  }
+  if (action === "select") selectSection.style.display = "block";
+  if (action === "create") createSection.style.display = "block";
 };
 
 /* ======================
-   STUDENT MODAL (BROWSE)
+   STUDENT MODAL (FILTERED BY CLASS)
 ====================== */
 window.openStudentDialog = async function () {
   const modal = document.getElementById("studentModal");
@@ -116,14 +115,25 @@ window.openStudentDialog = async function () {
   modal.style.display = "flex";
   container.innerHTML = "";
 
-  const snap = await getDocs(collection(db, "students"));
+  const q = query(
+    collection(db, "students"),
+    where("classId", "==", mentorClassId)
+  );
+
+  const snap = await getDocs(q);
 
   snap.forEach(d => {
     const s = d.data();
     container.innerHTML += `
       <div
-        onclick="selectStudent('${s.student_id}', '${s.student_name}', '${s.email || "-"}', '${s.phone || "-"}')"
-        style="padding:10px;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer">
+        onclick="selectStudent(
+          '${s.student_id}',
+          '${s.student_name}',
+          '${s.email || "-"}',
+          '${s.phone || "-"}'
+        )"
+        style="padding:10px;border:1px solid #e5e7eb;
+               border-radius:6px;cursor:pointer;margin-bottom:6px">
         <b>${s.student_name}</b><br>
         <small>${s.student_id}</small>
       </div>
@@ -148,7 +158,7 @@ window.selectStudent = function (id, name, email, phone) {
 };
 
 /* ======================
-   LOAD STUDENTS (TABLE)
+   LOAD STUDENTS (CLASS-LOCKED)
 ====================== */
 async function loadStudents() {
   const list = document.getElementById("studentList");
@@ -156,7 +166,13 @@ async function loadStudents() {
   if (!list || !count) return;
 
   list.innerHTML = "";
-  const snap = await getDocs(collection(db, "students"));
+
+  const q = query(
+    collection(db, "students"),
+    where("classId", "==", mentorClassId)
+  );
+
+  const snap = await getDocs(q);
   count.innerText = snap.size;
 
   snap.forEach(d => {
@@ -170,7 +186,8 @@ async function loadStudents() {
             View Details
           </button>
         </td>
-      </tr>`;
+      </tr>
+    `;
   });
 }
 
@@ -180,50 +197,41 @@ async function loadStudents() {
 window.viewStudentDetails = id => {
   location.href = `student-details.html?id=${id}`;
 };
-window.createStudent = async function () {
-  console.clear();
-  console.log("🟢 createStudent() called");
 
+/* ======================
+   CREATE STUDENT (AUTO CLASS)
+====================== */
+window.createStudent = async function () {
   try {
-    const id = document.getElementById("newStudentId")?.value.trim();
-    const name = document.getElementById("newStudentName")?.value.trim();
-    const email = document.getElementById("newStudentEmail")?.value.trim();
-    const phone = document.getElementById("newStudentPhone")?.value.trim();
-    const parentPhone = document.getElementById("newParentPhone")?.value.trim();
+    const id = document.getElementById("newStudentId").value.trim();
+    const name = document.getElementById("newStudentName").value.trim();
+    const email = document.getElementById("newStudentEmail").value.trim();
+    const phone = document.getElementById("newStudentPhone").value.trim();
+    const parentPhone = document.getElementById("newParentPhone").value.trim();
     const msg = document.getElementById("createStudentMsg");
 
     if (!id || !name) {
       msg.innerText = "Student ID and Name are required";
       msg.style.color = "red";
-      console.error("❌ Validation failed");
       return;
     }
 
-    console.log("📦 Student Data:", {
-      id,
-      name,
-      email,
-      phone,
-      parentPhone,
-      classId: mentorClassId
-    });
+const studentRef = await addDoc(collection(db, "students"), {
+  student_id: id,
+  student_name: name,
+  email: email || "",
+  phone: phone || "",
+  parent_phone: parentPhone || "",
+  classId: mentorClassId,
 
-    await addDoc(collection(db, "students"), {
-      student_id: id,
-      student_name: name,
-      email: email || "",
-      phone: phone || "",
-      parent_phone: parentPhone || "",
-      classId: mentorClassId,
-      createdAt: new Date()
-    });
+  createdAt: new Date()
+});
+
+
 
     msg.innerText = "✅ Student created successfully";
     msg.style.color = "green";
 
-    console.log("✅ Student saved to Firestore");
-
-    // reset form
     document.getElementById("newStudentId").value = "";
     document.getElementById("newStudentName").value = "";
     document.getElementById("newStudentEmail").value = "";
@@ -237,3 +245,72 @@ window.createStudent = async function () {
     alert("Create student failed. Check console.");
   }
 };
+  /* ======================
+   SET PASSWORD FOR STUDENT
+====================== */
+window.setPasswordForStudent = async function () {
+  const studentId = document.getElementById("selectedId")?.innerText;
+  const password = document.getElementById("cs_passwordSelect")?.value.trim();
+
+  if (!studentId || !password) {
+    alert("Select a student and enter a password");
+    return;
+  }
+
+  if (password.length < 6) {
+    alert("Password must be at least 6 characters");
+    return;
+  }
+
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, "students"),
+        where("student_id", "==", studentId),
+        where("classId", "==", mentorClassId)
+      )
+    );
+
+    if (snap.empty) {
+      alert("Student not found");
+      return;
+    }
+
+    const studentDoc = snap.docs[0];
+
+    await updateDoc(doc(db, "students", studentDoc.id), {
+      tempPassword: password,
+      firstLogin: true,
+      passwordSetByMentor: true,
+      passwordSetAt: new Date(),
+      authCreated: false,
+       revoked: false,
+       firstLogin: true,
+       mentorUid: mentorUid
+    });
+
+    // ✅ CREATE users doc ONLY AFTER password is set
+await addDoc(collection(db, "users"), {
+  role: "student",
+
+  studentId: studentId,
+  studentDocId: studentDoc.id,
+
+  authCreated: false,   // HOD will approve later
+  revoked: false,
+  firstLogin: true,
+
+  createdAt: new Date()
+});
+
+    alert("✅ Temporary password set successfully");
+
+    document.getElementById("cs_passwordSelect").value = "";
+    document.getElementById("passwordSectionSelect").style.display = "none";
+
+  } catch (err) {
+    console.error("Set password failed:", err);
+    alert("Failed to set password");
+  }
+};
+

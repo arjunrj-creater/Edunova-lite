@@ -9,6 +9,16 @@
 <link rel="icon" href="../images/logo.png">
 
 <style>
+/* 🔒 iframe-safe overrides */
+body {
+  margin: 0;
+  background: transparent;
+}
+
+.main {
+  padding: 0 !important;
+  margin: 0 !important;
+}
 .card-block{margin-bottom:25px;}
 table{width:100%;border-collapse:collapse;margin-top:10px;}
 th,td{padding:8px;border-bottom:1px solid #e5e7eb;}
@@ -28,30 +38,7 @@ th{background:#f1f5f9;}
 
 <body>
 
-<!-- TOPBAR -->
-<div class="topbar">
-  <button class="hamburger" onclick="toggleSidebar()">☰</button>
-  <div class="brand">
-    <img src="../images/logo.png" class="logo">
-    <span>Edunova – Student</span>
-  </div>
-  <button class="logout-btn" onclick="logout()">Logout</button>
-</div>
 
-<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
-
-<div class="layout">
-
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <img src="../images/logo.png">
-      <span>Edunova</span>
-    </div>
-    <a href="dashboard.html">Dashboard</a>
-    <a class="active">Internal Marks</a>
-    <a href="profile.html">Profile</a>
-  </div>
 
   <!-- MAIN -->
   <div class="main">
@@ -65,79 +52,107 @@ th{background:#f1f5f9;}
 
 </div>
 
-<!-- FIREBASE -->
 <script type="module">
 import { auth, db } from "../js/firebase.js";
 import { onAuthStateChanged } from
   "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
+  doc, getDoc,
   collection, query, where, getDocs
 } from
   "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const container = document.getElementById("marksContainer");
 
-onAuthStateChanged(auth, async user=>{
-  if(!user) return;
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
 
-  // 🔹 get student profile
-  const studentSnap = await getDocs(
-    query(collection(db,"students"), where("uid","==",user.uid))
-  );
-
-  if(studentSnap.empty){
-    container.innerHTML="<p>No student record found</p>";
+  /* =====================
+     GET STUDENT PROFILE
+  ===================== */
+  const userSnap = await getDoc(doc(db, "users", user.uid));
+  if (!userSnap.exists()) {
+    container.innerHTML = "<p>User profile not found</p>";
     return;
   }
 
-  const student = studentSnap.docs[0].data();
+  const studentId = userSnap.data().studentId;
+  if (!studentId) {
+    container.innerHTML = "<p>Student ID not linked</p>";
+    return;
+  }
 
-  // 🔹 get approved marks
+  /* =====================
+     LOAD SUBJECT MAP
+  ===================== */
+  const subjectSnap = await getDocs(collection(db, "subjects"));
+  const subjectMap = {};
+
+  subjectSnap.forEach(docSnap => {
+    const data = docSnap.data();
+    subjectMap[docSnap.id] = data.subject_name || docSnap.id;
+  });
+
+  /* =====================
+     QUERY PUBLISHED MARKS
+  ===================== */
   const q = query(
-    collection(db,"internal_marks"),
-    where("classId","==",student.classId),
-    where("status","==","approved")
+    collection(db, "internal_marks"),
+    where("published", "==", true)
   );
 
   const snap = await getDocs(q);
 
-  if(snap.empty){
-    container.innerHTML="<p>No internal marks published yet</p>";
+  if (snap.empty) {
+    container.innerHTML = "<p>No internal marks published yet</p>";
     return;
   }
 
-  snap.forEach(doc=>{
-    const data = doc.data();
-    renderMarks(data, student.student_id);
+  let found = false;
+
+  snap.forEach(docSnap => {
+    const data = docSnap.data();
+    const student = data.students?.find(s => s.studentId === studentId);
+
+    if (student) {
+      found = true;
+      renderMarks(data, student, subjectMap);
+    }
   });
+
+  if (!found) {
+    container.innerHTML = "<p>No marks available for you</p>";
+  }
 });
 
-function renderMarks(data, studentId){
-  const s = data.students.find(st => st.studentId === studentId);
-  if(!s) return;
+
+function renderMarks(data, s, subjectMap) {
+  const subjectName = subjectMap[data.subjectId] ?? data.subjectId ?? "—";
 
   container.innerHTML += `
     <div class="card-block">
       <h4>
-        Subject: ${data.subjectId}
-        <span class="badge-approved">Approved</span>
+        Subject: ${subjectName}
+        <span class="badge-approved">Published</span>
       </h4>
 
       <table>
         <thead>
           <tr>
-            <th>Internal 1</th>
-            <th>Internal 2</th>
+            <th>Test 1</th>
+            <th>Test 2</th>
             <th>Assignment</th>
+            <th>Attendance</th>
             <th>Total</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>${s.internal1}</td>
-            <td>${s.internal2}</td>
-            <td>${s.assignment}</td>
-            <td class="total">${s.total}</td>
+            <td>${s.test1 ?? "-"}</td>
+            <td>${s.test2 ?? "-"}</td>
+            <td>${s.assignment ?? "-"}</td>
+            <td>${s.attendance ?? "-"}</td>
+            <td class="total">${s.total ?? "-"}</td>
           </tr>
         </tbody>
       </table>
@@ -145,6 +160,3 @@ function renderMarks(data, studentId){
   `;
 }
 </script>
-
-</body>
-</html>

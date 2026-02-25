@@ -10,6 +10,47 @@
 
   <!-- SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+  <style>
+    .hidden { display: none; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    th {
+      background: #2563eb;
+      color: white;
+    }
+
+    tr.error-row {
+      background: #fee2e2;
+    }
+
+    button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #e5e7eb;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  </style>
 </head>
 
 <body style="background:transparent;">
@@ -20,14 +61,14 @@
   <section class="card">
     <h3>Upload Student Details</h3>
 
-    <input type="file" id="excelFile" accept=".xlsx" />
+    <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" />
 
     <p class="hint">
       Excel must contain:<br>
       student_id, student_name, email, phone, parent_phone, seat_type, status
     </p>
 
-    <button id="previewBtn">Preview</button>
+    <button type="button" id="previewBtn">Preview</button>
   </section>
 
   <!-- PREVIEW -->
@@ -42,7 +83,7 @@
     </div>
 
     <div style="margin-top:16px; display:flex; gap:12px;">
-      <button id="confirmBtn" disabled>Confirm & Save</button>
+      <button id="confirmBtn">Confirm & Save</button>
       <button id="cancelBtn" class="secondary">Cancel</button>
     </div>
   </section>

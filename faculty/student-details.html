@@ -1,156 +1,249 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Student Details | Edunova</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Students List | Edunova</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="stylesheet" href="../css/dashboard.css">
-  <link rel="icon" href="../images/logo.png">
+<link rel="stylesheet" href="../css/dashboard.css">
 
-  <style>
-    body {
-      background: #f5f7fb;
-    }
+<style>
+/* 🔒 iframe-safe reset */
+body {
+  margin: 0;
+  background: transparent;
+}
 
-    .details-container {
-      max-width: 800px;
-      margin: 20px auto;
-      background: white;
-      border-radius: 8px;
-      padding: 30px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
+.main {
+  padding: 0 !important;
+  margin: 0  !important;
+}
 
-    .details-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-      border-bottom: 2px solid #e2e8f0;
-      padding-bottom: 20px;
-    }
+/* CONTENT CARD */
+.container {
+  max-width: 1000px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 25px;
+  margin: 0 auto; /* 🔥 CENTER FIX */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
 
-    .details-header h2 {
-      margin: 0;
-      color: #1e293b;
-    }
+h2 {
+  margin-top: 0;
+  color: #1e293b;
+}
 
-    .back-btn {
-      padding: 8px 16px;
-      background: #64748b;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-    }
+.filters {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
 
-    .back-btn:hover {
-      background: #475569;
-    }
+select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  min-width: 200px;
+}
 
-    .details-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-    }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
 
-    .detail-item {
-      padding: 15px;
-      background: #f8fafc;
-      border-radius: 6px;
-      border-left: 4px solid #3b82f6;
-    }
+th, td {
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
 
-    .detail-label {
-      font-size: 12px;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 5px;
-    }
+th {
+  background: #f1f5f9;
+  font-size: 13px;
+  color: #475569;
+}
 
-    .detail-value {
-      font-size: 16px;
-      font-weight: 500;
-      color: #1e293b;
-      word-break: break-all;
-    }
+.loading {
+  padding: 20px;
+  color: #64748b;
+}
 
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #64748b;
-    }
+.error {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 15px;
+}
 
-    .error {
-      background: #fee2e2;
-      color: #991b1b;
-      padding: 15px;
-      border-radius: 6px;
-      margin-bottom: 20px;
-    }
-  </style>
+.count {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #475569;
+}
+</style>
 </head>
 
 <body>
 
-<div class="details-container">
-  <div class="details-header">
-    <h2>Student Details</h2>
-    <button class="back-btn" onclick="goBack()">← Back</button>
-  </div>
+<div class="main">
+  <div class="container">
+    <h2>Students List</h2>
 
-  <div id="errorMsg" class="error" style="display: none;"></div>
-  <div id="loadingMsg" class="loading">Loading student details...</div>
+    <!-- Filters -->
+    <div class="filters">
+      <select id="classSelect">
+        <option value="">Select Class</option>
+      </select>
 
-  <div id="detailsContent" style="display: none;">
-    <div class="details-grid">
-      <div class="detail-item">
-        <div class="detail-label">Student ID</div>
-        <div class="detail-value" id="studentId">-</div>
-      </div>
-
-      <div class="detail-item">
-        <div class="detail-label">Student Name</div>
-        <div class="detail-value" id="studentName">-</div>
-      </div>
-
-      <div class="detail-item">
-        <div class="detail-label">Email</div>
-        <div class="detail-value" id="studentEmail">-</div>
-      </div>
-
-      <div class="detail-item">
-        <div class="detail-label">Phone</div>
-        <div class="detail-value" id="studentPhone">-</div>
-      </div>
-
-      <div class="detail-item">
-        <div class="detail-label">Parent Phone</div>
-        <div class="detail-value" id="studentParentPhone">-</div>
-      </div>
-
-      <div class="detail-item">
-        <div class="detail-label">Seat Type</div>
-        <div class="detail-value" id="studentSeatType">-</div>
-      </div>
-
-      <div class="detail-item">
-        <div class="detail-label">Status</div>
-        <div class="detail-value" id="studentStatus">-</div>
-      </div>
-
-      <div class="detail-item">
-        <div class="detail-label">Department</div>
-        <div class="detail-value" id="studentDepartment">-</div>
-      </div>
+      <select id="subjectSelect" disabled>
+        <option value="">Select Subject</option>
+      </select>
     </div>
+
+    <div id="loading" class="loading">Select class and subject</div>
+    <div id="error" class="error" style="display:none;"></div>
+
+    <table id="studentsTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Student ID</th>
+          <th>Student Name</th>
+          <th>Phone</th>
+          </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+
+    <div class="count" id="count"></div>
   </div>
 </div>
 
-<script type="module" src="js/faculty-student-details.js"></script>
-</body>
+<script type="module">
+  import { auth, db } from "../js/firebase.js";
+  import { onAuthStateChanged, signOut } from
+    "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import {
+    doc, getDoc, getDocs, collection
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+  const classSelect = document.getElementById("classSelect");
+  const subjectSelect = document.getElementById("subjectSelect");
+  const table = document.getElementById("studentsTable");
+  const tableBody = document.getElementById("tableBody");
+  const loading = document.getElementById("loading");
+  const error = document.getElementById("error");
+  const count = document.getElementById("count");
+
+  let assignments = [];
+  let classMap = {};
+  let subjectMap = {};
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
+
+    const facultySnap = await getDoc(doc(db, "faculties", user.uid));
+    assignments = facultySnap.data()?.assignments || [];
+
+    const classSnap = await getDocs(collection(db, "classes"));
+    classSnap.forEach(d => classMap[d.id] = d.data().name);
+
+    const subjectSnap = await getDocs(collection(db, "subjects"));
+    subjectSnap.forEach(d => subjectMap[d.id] = d.data().subject_name);
+
+    populateClasses();
+  });
+
+  function populateClasses() {
+    const unique = [...new Set(assignments.map(a => a.classId))];
+    unique.forEach(cid => {
+      const opt = document.createElement("option");
+      opt.value = cid;
+      opt.textContent = classMap[cid] || cid;
+      classSelect.appendChild(opt);
+    });
+  }
+
+  classSelect.addEventListener("change", () => {
+    subjectSelect.innerHTML = `<option value="">Select Subject</option>`;
+    subjectSelect.disabled = true;
+    resetTable();
+
+    const classId = classSelect.value;
+    if (!classId) return;
+
+    assignments
+      .filter(a => a.classId === classId)
+      .forEach(a => {
+        const opt = document.createElement("option");
+        opt.value = a.subjectId;
+        opt.textContent = subjectMap[a.subjectId];
+        subjectSelect.appendChild(opt);
+      });
+
+    subjectSelect.disabled = false;
+  });
+
+  subjectSelect.addEventListener("change", loadStudents);
+
+  async function loadStudents() {
+    resetTable();
+
+    const classId = classSelect.value;
+    const subjectId = subjectSelect.value;
+    if (!classId || !subjectId) return;
+
+    loading.innerText = "Loading students...";
+
+    const snap = await getDocs(collection(db, "students"));
+    let i = 1;
+
+    snap.forEach(d => {
+      const s = d.data();
+      if (s.classId === classId) {
+        tableBody.innerHTML += `
+          <tr>
+            <td>${i++}</td>
+            <td>${s.student_id}</td>
+            <td>${s.student_name}</td>
+            <td>${s.phone || "-"}</td>
+          </tr>
+        `;
+      }
+    });
+
+    if (i === 1) {
+      showError("No students found");
+      return;
+    }
+
+    loading.style.display = "none";
+    table.style.display = "table";
+    count.innerText = `Total Students: ${i - 1}`;
+  }
+
+  function resetTable() {
+    table.style.display = "none";
+    tableBody.innerHTML = "";
+    count.innerText = "";
+    loading.style.display = "block";
+    error.style.display = "none";
+  }
+
+  function showError(msg) {
+    loading.style.display = "none";
+    error.style.display = "block";
+    error.innerText = msg;
+  }
+
+  window.logout = async () => {
+    await signOut(auth);
+    window.location.href = "../index.html";
+  };
+</script>
+
+</body>
 </html>

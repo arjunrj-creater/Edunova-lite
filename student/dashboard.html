@@ -1,73 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Edunova – Student</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Student Dashboard | Edunova</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="stylesheet" href="../css/dashboard.css">
-  <link rel="stylesheet" href="../css/dashboard.css">
-  <link rel="icon" href="../images/logo.png">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="icon" href="../images/logo.png">
 </head>
+
 <body>
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <button class="hamburger" id="menuBtn" aria-label="Open menu" onclick="toggleSidebar()">☰</button>
-
   <div class="brand">
-    <img src="../images/logo.png" class="logo" alt="Edunova">
+    <img src="../images/logo.png" class="logo">
     <span>Edunova – Student</span>
   </div>
-
   <button class="logout-btn" id="logoutBtn">Logout</button>
 </div>
 
 <div class="layout">
 
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <img src="../images/logo.png" alt="logo">
-      <span>Edunova</span>
-    </div>
-    <a class="active" onclick="showSection('dashboard')">Dashboard</a>
-    <a onclick="showSection('attendance')">Attendance</a>
-    <a onclick="showSection('internalMarks')">Internal Marks</a>
-    <a onclick="showSection('profileCard')">Profile</a>
-  </aside>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <a class="active" data-page="students-summary.html">Dashboard</a>
+    <a data-page="attendance.html">Attendance</a>
+    <a data-page="internal-marks.html">Internal Marks</a>
+    <a data-page="subject.html">Subjects</a>
+    <a data-page="student_profile.html">Profile</a>
+  </div>
 
-  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
-
-  <main class="main">
-    <div id="dashboard" class="card">
-      <h3 id="studentName">Welcome 👋</h3>
-      <p id="studentInfo">Department | Semester | Section</p>
-    </div>
-
-    <div id="attendance" class="card hidden">
-      <h3>Attendance</h3>
-      <p id="attendanceSummary">Overall Attendance: --%</p>
-      <div id="attendanceDetails"></div>
-    </div>
-
-    <div id="internalMarks" class="card hidden">
-      <h3>Internal Marks</h3>
-      <p id="marksSummary">Marks will appear here</p>
-    </div>
-
-    <div id="subjects" class="card hidden">
-      <h3>Subjects</h3>
-      <div id="subjectsList">No subjects configured</div>
-    </div>
-
-    <div id="profileCard" class="card hidden profile-page">
-      <iframe src="../common/profile.html" class="profile-iframe"></iframe>
-    </div>
-  </main>
+  <!-- MAIN -->
+  <div class="main">
+    <iframe
+      id="contentFrame"
+      src="students-summary.html"
+      style="width:100%; height:85vh; border:none;">
+    </iframe>
+  </div>
 
 </div>
 
-<script type="module" src="js/dashboard.js"></script>
-<script src="js/layout.js"></script>
+<script type="module" src="js/auth-check.js"></script>
+<script type="module" src="js/student-dashboard.js"></script>
+
 </body>
 </html>

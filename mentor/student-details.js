@@ -78,3 +78,36 @@ function showError(msg) {
 window.goBack = () => {
   window.location.href = "dashboard.html?section=students";
 };
+/* ======================
+   DELETE STUDENT
+====================== */
+
+import {
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+window.deleteStudent = async () => {
+
+  if (!studentId) {
+    alert("Student ID missing");
+    return;
+  }
+
+  const ok = confirm("Are you sure you want to delete this student permanently?");
+  if (!ok) return;
+
+  try {
+
+    await deleteDoc(doc(db, "students", studentId));
+
+    alert("Student deleted successfully");
+
+    // redirect back to students list
+    window.location.href = "dashboard.html?section=students";
+
+  } catch (err) {
+    console.error("Delete error:", err);
+    alert("Failed to delete student");
+  }
+
+};

@@ -1,3 +1,4 @@
+
 /* =====================
    FIREBASE IMPORTS
 ===================== */
@@ -7,6 +8,10 @@ import {
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+onAuthStateChanged(auth, (user) => {
+  console.log("UID:", user.uid);
+  console.log("EMAIL:", user.email);
+});
 
 import {
   doc,
@@ -192,7 +197,7 @@ async function createFaculty(){
     const cred = await createUserWithEmailAndPassword(auth, `${id}@edunova.com`, pass);
     const uid = cred.user.uid;
 
-    await setDoc(doc(db,"users",uid),{ name, role:"faculty", firstLogin:true });
+    await setDoc(doc(db,"users",uid),{ name, role:"faculty", facultyId:id, firstLogin:true });
     await setDoc(doc(db,"faculties",uid),{ name, facultyId:id });
 
     facultyName.value = facultyId.value = facultyPass.value = "";

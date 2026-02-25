@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student Profile | Edunova</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #f4f6f9;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.profile-wrapper {
+  max-width: 420px;
+  margin: 40px auto;
+}
+
+.profile-card {
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 14px 35px rgba(0,0,0,0.08);
+}
+
+.profile-header {
+  background: linear-gradient(135deg, #6b8de3, #5a78d6);
+  padding: 26px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.profile-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.profile-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.profile-body {
+  padding: 26px;
+}
+
+.profile-row {
+  margin-bottom: 12px;
+  font-size: 15px;
+  color: #111827;
+}
+
+.profile-row b {
+  color: #374151;
+}
+
+.primary-btn {
+  margin-top: 18px;
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="profile-wrapper">
+  <div class="profile-card">
+
+    <div class="profile-header">
+      <div class="profile-avatar">👤</div>
+      <h3>My Profile</h3>
+    </div>
+
+    <div class="profile-body">
+      <div class="profile-row"><b>Name:</b> <span id="pName">-</span></div>
+      <div class="profile-row"><b>Role:</b> STUDENT</div>
+      <div class="profile-row"><b>ID:</b> <span id="pId">-</span></div>
+      <div class="profile-row"><b>Class:</b> <span id="pClass">-</span></div>
+      <div class="profile-row"><b>Mentor:</b> <span id="pMentor">-</span></div>
+
+      <button class="primary-btn"
+        onclick="window.location.href='../common/change-password.html'">
+        Change Password
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script type="module" src="student_profile.js"></script>
+
+</body>
+</html>

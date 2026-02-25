@@ -6,6 +6,113 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="../css/dashboard.css">
 <link rel="icon" href="../images/logo.png">
+<style>
+  /* HOD Profile Layout */
+.hod-profile-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Profile iframe box */
+.hod-profile-box {
+  background: transparent;
+}
+
+/* iframe itself */
+.profile-iframe {
+  width: 100%;
+  height: 420px;
+  border: none;
+  border-radius: 18px;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.08);
+}
+
+/* Actions box */
+.hod-actions-box {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+/* Actions title */
+.hod-actions-box h4 {
+  margin: 0 0 14px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Danger button (admin power) */
+.danger-btn {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.danger-btn:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+/* Warning text */
+.action-note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.action-note code {
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+@media (max-width: 900px) {
+  .hod-profile-layout {
+    grid-template-columns: 1fr;
+  }
+}
+.hod-profile-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 24px;
+  align-items: stretch; /* IMPORTANT */
+}
+
+/* iframe wrapper */
+.hod-profile-box {
+  width: 100%;
+}
+
+/* iframe itself */
+.profile-iframe {
+  width: 100%;
+  height: 520px;              /* IMPORTANT */
+  border: none;
+  border-radius: 18px;
+  background: transparent;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.08);
+}
+
+/* Admin box */
+.hod-actions-box {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.08);
+  height: fit-content;
+}
+
+</style>
 </head>
 
 <body>
@@ -63,11 +170,6 @@
           <h2 id="mentorCount">0</h2>
           <p>Total Mentors</p>
         </div>
-
-        <div class="stat-box stat-student">
-          <h2 id="studentCount">0</h2>
-          <p>Total Students</p>
-        </div>
       </div>
     </div>
 
@@ -77,15 +179,34 @@
 
 
     <!-- PROFILE -->
-    <div class="card hidden profile-page" id="profileCard">
-      <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;">
-        <iframe src="../common/profile.html" class="profile-iframe"></iframe>
-        <div style="display:flex;flex-direction:column;gap:8px;min-width:220px;margin-left:12px;">
-          <button onclick="advanceAllSemesters()" class="primary-btn">Advance All Students → Next Semester</button>
-          <small style="color:#666">This will increment `semester` on every user with role `student`. Previous semester values are archived.</small>
-        </div>
-      </div>
+<div class="card hidden profile-page" id="profileCard">
+
+  <div class="hod-profile-layout">
+
+    <!-- Profile iframe -->
+    <div class="hod-profile-box">
+      <iframe src="../common/profile.html" class="profile-iframe"></iframe>
     </div>
+
+    <!-- Admin Actions -->
+    <div class="hod-actions-box">
+      <h4>Administrative Actions</h4>
+
+<button onclick="advanceAllSemesters()" class="danger-btn">
+  Advance All Students → Next Semester
+</button>
+
+
+      <p class="action-note">
+        This will increment <code>semester</code> for all users with role
+        <b>student</b>. Previous semester data will be archived.
+      </p>
+    </div>
+
+  </div>
+
+</div>
+
 
     <!-- CREATE MENTOR -->
     <div id="mentor" class="card hidden">
@@ -187,5 +308,6 @@
 
 <script type="module" src="../js/hod.js"></script>
 <script type="module" src="./approve-students.js"></script>
+<script type="module" src="advance-semester.js"></script>
 </body>
 </html>

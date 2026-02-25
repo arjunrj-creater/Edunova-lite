@@ -1,4 +1,9 @@
 // faculty/set-password.js
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 import { auth, db } from "../js/firebase.js";
 import {
   onAuthStateChanged,
@@ -48,9 +53,18 @@ saveBtn.addEventListener("click", async () => {
   }
 
   try {
+    /* 🔐 REQUIRED: Reauthenticate first */
+    const credential = EmailAuthProvider.credential(
+      currentUser.email,
+      confirm   // temp password used to login
+    );
+
+    await reauthenticateWithCredential(currentUser, credential);
+
+    /* ✅ Now update password */
     await updatePassword(currentUser, pass);
 
-    // Faculty profile (NOT completed yet)
+    // Faculty profile
     await updateDoc(doc(db, "faculties", currentUser.uid), {
       profileCompleted: false,
       updatedAt: serverTimestamp()
@@ -71,6 +85,13 @@ saveBtn.addEventListener("click", async () => {
 
   } catch (err) {
     console.error(err);
-    msg.innerText = err.message || "Failed to update password";
+
+    if (err.code === "auth/wrong-password") {
+      msg.innerText = "Temporary password is incorrect";
+    } else if (err.code === "auth/requires-recent-login") {
+      msg.innerText = "Please login again and retry";
+    } else {
+      msg.innerText = err.message || "Failed to update password";
+    }
   }
 });

@@ -6,9 +6,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="../css/dashboard.css">
-<link rel="icon" href="../images/logo.png">
 
 <style>
+/* 🔒 iframe-safe overrides */
+body {
+  margin: 0;
+  background: transparent;
+}
+
+.main {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
 .form-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -33,94 +43,62 @@ td input{width:100%;padding:6px;}
 .alert.show{display:block;}
 .alert-success{background:#dcfce7;color:#166534;}
 .alert-danger{background:#fee2e2;color:#991b1b;}
-.alert-info{background:#e0f2fe;color:#075985;}
 </style>
 </head>
 
 <body>
 
-<!-- TOPBAR -->
-<div class="topbar">
-  <button class="hamburger" onclick="toggleSidebar()">☰</button>
-  <div class="brand">
-    <img src="../images/logo.png" class="logo">
-    <span>Edunova – Faculty</span>
-  </div>
-  <button class="logout-btn" onclick="logout()">Logout</button>
-</div>
+<div class="main">
+  <div class="card">
+    <h3>Upload Attendance</h3>
+    <p class="note">Select your assigned class and subject</p>
 
-<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+    <div id="alert" class="alert"></div>
 
-<div class="layout">
+    <div class="form-grid">
+      <div class="input-field">
+        <label>Class</label>
+        <select id="classSelect">
+          <option value="">Select Class</option>
+        </select>
+      </div>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <img src="../images/logo.png">
-      <span>Edunova</span>
+      <div class="input-field">
+        <label>Subject</label>
+        <select id="subjectSelect" disabled>
+          <option value="">Select Subject</option>
+        </select>
+      </div>
+
+      <div class="input-field">
+        <label>Total Classes Held</label>
+        <input type="number" id="totalClasses" min="1">
+      </div>
     </div>
-    <a href="dashboard.html">Dashboard</a>
-    <a class="active">Attendance</a>
-    <a href="marks.html">Internal Marks</a>
-    <a href="profile.html">Profile</a>
-  </div>
 
-  <!-- MAIN -->
-  <div class="main">
-    <div class="card">
-      <h3>Upload Attendance</h3>
-      <p class="note">Select your assigned class and subject</p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>S.No</th>
+            <th>Student ID</th>
+            <th>Name</th>
+            <th>Attended</th>
+            <th>%</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
 
-      <div id="alert" class="alert"></div>
+    <p class="note" id="rowCount">Total Rows: 0</p>
 
-      <!-- CLASS / SUBJECT -->
-      <div class="form-grid">
-        <div class="input-field">
-          <label>Class</label>
-          <select id="classSelect">
-            <option value="">Select Class</option>
-          </select>
-        </div>
-
-        <div class="input-field">
-          <label>Subject</label>
-          <select id="subjectSelect" disabled>
-            <option value="">Select Subject</option>
-          </select>
-        </div>
-
-        <div class="input-field">
-          <label>Total Classes Held</label>
-          <input type="number" id="totalClasses" min="1">
-        </div>
-      </div>
-
-      <!-- TABLE -->
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>S.No</th>
-              <th>Student ID</th>
-              <th>Name</th>
-              <th>Attended</th>
-              <th>%</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-
-      <p class="note" id="rowCount">Total Rows: 0</p>
-
-      <div style="margin-top:20px;display:flex;gap:12px;">
-        <button class="primary-btn" onclick="submitAttendance()">Submit Attendance</button>
-        <button class="danger-btn" onclick="resetForm()">Reset</button>
-      </div>
+    <div style="margin-top:20px;display:flex;gap:12px;">
+      <button class="primary-btn" onclick="submitAttendance()">Submit Attendance</button>
+      <button class="danger-btn" onclick="location.reload()">Reset</button>
     </div>
   </div>
 </div>
-
 <!-- 🔥 FIREBASE + STUDENT AUTO LOAD (ONLY ADDITION) -->
 <script type="module">
 import { auth, db } from "../js/firebase.js";
@@ -281,6 +259,7 @@ window.submitAttendance = async function () {
     const attendedInput = row.querySelector(".attended");
     const attended = parseInt(attendedInput.value || 0, 10);
     const percentText = row.querySelector(".percent").innerText;
+    
 
     students.push({
       studentId,

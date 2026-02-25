@@ -18,6 +18,9 @@ const classSelect = document.getElementById("classSelect");
 const subjectSelect = document.getElementById("subjectSelect");
 const title = document.getElementById("contextTitle");
 const content = document.getElementById("dynamicContent");
+const classCountEl = document.getElementById("classCount");
+const subjectCountEl = document.getElementById("subjectCount");
+
 
 /* ======================
    STATE
@@ -43,6 +46,13 @@ onAuthStateChanged(auth, async (user) => {
       title.innerText = "No teaching assignments found";
       return;
     }
+    // ===== DASHBOARD COUNTS =====
+const uniqueClasses = new Set(assignments.map(a => a.classId));
+const uniqueSubjects = new Set(assignments.map(a => a.subjectId));
+
+if (classCountEl) classCountEl.innerText = uniqueClasses.size;
+if (subjectCountEl) subjectCountEl.innerText = uniqueSubjects.size;
+
 
     // 🔎 Load classes
     const classSnap = await getDocs(collection(db, "classes"));
@@ -222,4 +232,11 @@ window.viewStudentList = async function (classId) {
 
 window.viewFacultyStudentDetails = function (studentId) {
   window.location.href = `student-details.html?id=${studentId}`;
+};
+/* ======================
+   LOGOUT
+====================== */
+window.logout = async () => {
+  await signOut(auth);
+  location.replace("../index.html");
 };

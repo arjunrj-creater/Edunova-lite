@@ -46,36 +46,37 @@ export async function saveStudents(rows) {
 
   const mentor = mentorSnap.data();
 
-  // ✅ Mentor fields (NON-BLOCKING)
+  // ✅ Mentor fields
   const department_id = mentor.department_id || null;
   const department_name = mentor.department_name || null;
   const semester = mentor.current_academic_year || null;
   const class_section = mentor.class_section || null;
 
   let successCount = 0;
+
   const studentsRef = collection(db, "students");
 
-  // ================= LOOP =================
+  // ================= CLEAN LOOP =================
   for (const row of rows) {
 
-    const studentId = row.student_id;
+    // 🔥 normalize ID to prevent duplicates like sit23 / SIT23
+    const studentId = row.student_id?.trim().toUpperCase();
 
-    const studentRef = doc(studentsRef, studentId);
-    const existing = await getDoc(studentRef);
-
-    // ❌ Prevent overwrite
-    if (existing.exists()) {
-      console.warn("Student already exists:", studentId);
+    if (!studentId) {
+      console.warn("Skipping row with empty student_id", row);
       continue;
     }
 
+    const studentRef = doc(studentsRef, studentId);
+
     const studentDoc = {
+
       student_id: studentId,
-      student_name: row.student_name,
-      email: row.email,
-      phone: row.phone,
-      parent_phone: row.parent_phone,
-      seat_type: row.seat_type,
+      student_name: row.student_name || "",
+      email: row.email || "",
+      phone: row.phone || "",
+      parent_phone: row.parent_phone || "",
+      seat_type: row.seat_type || "",
       status: row.status === "true",
 
       department_id,
@@ -86,13 +87,14 @@ export async function saveStudents(rows) {
       mentor_uid: mentorUid,
       auth_created: false,
       created_at: serverTimestamp()
+
     };
 
-    await setDoc(studentRef, studentDoc);
+    // ⭐ UPSERT (create OR update safely)
+    await setDoc(studentRef, studentDoc, { merge: true });
+
     successCount++;
   }
 
-  return {
-    successCount
-  };
+  return { successCount };
 }

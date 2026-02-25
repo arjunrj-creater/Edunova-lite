@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+<div class="card">
+<h3>Internal Marks</h3>
+<table>
+<thead>
+<tr><th>Subject</th><th>Total</th><th>Max</th><th>%</th></tr>
+</thead>
+<tbody id="body"></tbody>
+</table>
+<p id="msg" class="note"></p>
+</div>
+
+<script type="module">
+import { auth, db } from "../js/firebase.js";
+import { onAuthStateChanged } from
+ "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { collection,getDocs,query,where } from
+ "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+onAuthStateChanged(auth, async user=>{
+ if(!user) return;
+ const snap = await getDocs(
+  query(collection(db,"internal_marks"),
+   where("published","==",true),
+   where("verifiedByMentor","==",true))
+ );
+ let found=false;
+ snap.forEach(d=>{
+  d.data().marks.forEach(m=>{
+   if(m.studentAuthUid===user.uid){
+    found=true;
+    document.getElementById("body").innerHTML+=`
+     <tr>
+      <td>${d.data().subjectName}</td>
+      <td>${m.marks}</td>
+      <td>${d.data().maxMarks}</td>
+      <td>${m.percentage}%</td>
+     </tr>`;
+   }
+  });
+ });
+ if(!found) document.getElementById("msg").innerText="Not published yet";
+});
+</script>
+
+</body>
+</html>

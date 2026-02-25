@@ -33,8 +33,8 @@
     <a onclick="showSection('students')">My Students</a>
     <a onclick="showSection('createStudent')">Create Student</a>
     <a onclick="showSection('uploadStudents')">Upload Students</a>
-    <a href="attendance-verification.html">Attendance Verification</a>
-    <a href="mark-verification.html">Mark Verification</a>
+    <a onclick="showSection('attendanceverificationcard')">Attendance Verification</a>
+    <a onclick="showSection('markverificationcard')">Mark Verification</a>
     <a onclick="showSection('results')">Result Analysis</a>
     <a onclick="showSection('profileCard')">Profile</a>
   </div>
@@ -135,6 +135,25 @@
       <iframe src="upload-students.html"
               style="width:100%;height:600px;border:none;"></iframe>
     </div>
+    
+    <!-- ATTENDANCE VERIFICATION -->
+    <div id="attendanceverificationcard" class="card hidden">
+      <iframe src="attendance-verification.html"
+              style="width:100%;height:600px;border:none;"></iframe>
+    </div>
+    <!-- MARK VERIFICATION -->
+    <div id="markverificationcard" class="card hidden">
+      <iframe src="mark-verification.html"
+              style="width:100%;height:600px;border:none;"></iframe>
+    </div>
+    <!-- RESULT ANALYSIS -->
+<div id="results" class="card hidden">
+  <iframe
+    src="mentor_result_analysis.html"
+    style="width:100%;height:600px;border:none;">
+  </iframe>
+</div>
+
 
     <!-- MY STUDENTS -->
     <div id="students" class="card hidden">

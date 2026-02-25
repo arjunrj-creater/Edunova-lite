@@ -37,9 +37,11 @@
     </div>
 
     <a class="active" data-target="homeCard">Dashboard</a>
-    <a href="attendance-upload.html">Attendance</a>
-    <a href="marks.html">Internal Marks</a>
+    <a data-target="attendanceuploadcard">Attendance</a>
+    <a data-target="marksCard">Internal Marks</a>
+    <a data-target="studentdetailcard">Student Details</a>
     <a data-target="profileCard">Profile</a>
+   
 
   </div>
 
@@ -64,28 +66,40 @@
           <h2 id="subjectCount">–</h2>
           <p>Subjects</p>
         </div>
-
-        <div class="stat-box">
-          <h2 id="studentCount">–</h2>
-          <p>Students</p>
-        </div>
       </div>
 
       <!-- QUICK ACTIONS -->
-      <div style="margin-top:20px; display:flex; gap:12px; flex-wrap:wrap;">
-        <button class="primary-btn" onclick="openTeachingPanel()">
-          Open Teaching Panel
-        </button>
-        <button class="secondary-btn" onclick="location.href='attendance-upload.html'">
-          Take Attendance
-        </button>
-        <button class="secondary-btn" onclick="location.href='marks.html'">
-          Enter Marks
-        </button>
-      </div>
+<div style="margin-top:20px; display:flex; gap:12px; flex-wrap:wrap;">
+  <button class="primary-btn" onclick="openCard('studentdetailcard')">
+    Student Details
+  </button>
+
+  <button class="secondary-btn" onclick="openCard('attendanceuploadcard')">
+    Take Attendance
+  </button>
+
+  <button class="secondary-btn" onclick="openCard('marksCard')">
+    Enter Marks
+  </button>
+</div>
     </div>
 
-    <!-- ===== PROFILE (COMMON) ===== -->
+    <!-- ===== ATTENDANCE UPLOAD ===== -->
+    <div class="card hidden" id="attendanceuploadcard">
+      <iframe src="attendance-upload.html" style="width:100%;height:80vh;border:none;"></iframe>  
+    </div>
+
+    <!-- ===== MARKS UPLOAD ===== -->
+    <div class="card hidden" id="marksCard">
+      <iframe src="marks.html" style="width:100%;height:80vh;border:none;"></iframe>
+    </div>
+
+    <!-- ===== student-detalis ===== -->
+    <div class ="card hidden" id="studentdetailcard">
+      <iframe src="student-details.html" style="width:100%;height:80vh;border:none;"></iframe>
+    </div>  
+
+   <!-- ===== PROFILE (COMMON) ===== -->
     <div class="card hidden profile-page" id="profileCard">
       <iframe
         src="../common/profile.html"
@@ -93,35 +107,6 @@
         style="width:100%;height:80vh;border:none;">
       </iframe>
     </div>
-
-    <!-- ===== TEACHING PANEL ===== -->
-    <div class="card hidden" id="teachingPanel">
-      <h3 id="contextTitle">Select Class & Subject</h3>
-      <p class="note" id="contextNote">
-        Attendance, marks and student list will load here.
-      </p>
-
-      <div class="controls">
-        <div>
-          <label>Class</label>
-          <select id="classSelect">
-            <option value="">Select Class</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Subject</label>
-          <select id="subjectSelect" disabled>
-            <option value="">Select Subject</option>
-          </select>
-        </div>
-      </div>
-
-      <div id="dynamicContent"></div>
-    </div>
-
-  </div>
-</div>
 
 <!-- ================= AUTH + BASIC CHECK ================= -->
 <script type="module">
@@ -156,7 +141,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     document.getElementById("welcomeTitle").innerText =
-      `Welcome, ${userSnap.data().name || "Faculty"} 👋`;
+     ` Welcome, ${userSnap.data().name || "Faculty"} 👋`;
 
   } catch (err) {
     console.error(err);
@@ -169,12 +154,6 @@ document.getElementById("logoutBtn").onclick = async () => {
   location.replace("/index.html");
 };
 
-// Teaching panel open
-window.openTeachingPanel = () => {
-  document.getElementById("teachingPanel").classList.remove("hidden");
-  document.getElementById("teachingPanel")
-    .scrollIntoView({ behavior: "smooth" });
-};
 </script>
 
 <!-- ================= SIDEBAR SECTION SWITCH ================= -->
@@ -197,6 +176,29 @@ document.querySelectorAll(".sidebar a[data-target]").forEach(link => {
   });
 });
 </script>
+<script>
+function openCard(targetId) {
+  // Hide all cards
+  document.querySelectorAll(".main .card").forEach(card => {
+    card.classList.add("hidden");
+  });
+
+  // Show target card
+  document.getElementById(targetId).classList.remove("hidden");
+
+  // Update sidebar active state
+  document.querySelectorAll(".sidebar a").forEach(a => {
+    a.classList.remove("active");
+  });
+
+  const sidebarLink = document.querySelector(`.sidebar a[data-target="${targetId}"]`);
+  if (sidebarLink) sidebarLink.classList.add("active");
+
+  // Close sidebar on mobile
+  closeSidebar?.();
+}
+</script>
+
 
 <!-- ================= FACULTY LOGIC ================= -->
 <script type="module" src="js/faculty-dashboard.js"></script>

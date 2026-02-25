@@ -6,49 +6,168 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-  body {
-    margin: 0;
-    padding: 0;
-    background: #f5f7fb;
-    font-family: system-ui, sans-serif;
-  }
+/* ---------------- GLOBAL FIX ---------------- */
+html, body {
+  width: 100%;
+  overflow-x: hidden !important;
+}
 
-  .profile-wrapper {
-    padding: 32px;
-  }
+/* ---------------- PROFILE LAYOUT ---------------- */
+.profile-wrapper {
+  max-width: 880px;
+  margin: 40px auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
 
-  .profile-card {
-    background: #fff;
-    border-radius: 14px;
-    padding: 32px;
-    width: 100%;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
-  }
+/* Single clean card */
+.profile-card {
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden; /* important */
+  box-shadow: 0 14px 40px rgba(0,0,0,0.08);
+}
 
-  .profile-card h3 {
-    margin-top: 0;
-    margin-bottom: 20px;
-  }
+/* Header strip */
+.profile-header {
+  background: linear-gradient(135deg, #7192d9, #6884e0);
+  padding: 28px 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: #ffffff;
+}
 
-  .profile-card p {
-    margin: 14px 0;
-    font-size: 16px;
-  }
+/* Avatar circle */
+.profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(193, 178, 178, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
+/* Header title */
+.profile-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* Body */
+.profile-body {
+  padding: 32px;
+}
+
+/* Info rows */
+.profile-row {
+  margin-bottom: 14px;
+  font-size: 16px;
+  color: #111827;
+}
+
+.profile-row b {
+  color: #374151;
+}
+
+/* Button */
+.change-password {
+  margin-top: 26px;
+}
+
+.primary-btn {
+  padding: 12px 26px;
+  font-size: 14px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.primary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37,99,235,0.3);
+}
 </style>
+
+
+
 </head>
 
 <body>
 
 <div class="profile-wrapper">
   <div class="profile-card">
-    <h3>👤 My Profile</h3>
 
-    <p><b>Name:</b> <span id="pName">—</span></p>
-    <p><b>Email:</b> <span id="pEmail">—</span></p>
-    <p><b>Role:</b> <span id="pRole">—</span></p>
-    <p><b>ID:</b> <span id="pRef">—</span></p>
+    <div class="profile-header">
+      <div class="profile-avatar">👤</div>
+      <h3>My Profile</h3>
+    </div>
+
+    <div class="profile-body">
+      <div class="profile-row"><b>Name:</b> <span id="pName">—</span></div>
+      <div class="profile-row"><b>Role:</b> <span id="pRole">—</span></div>
+      <div class="profile-row"><b>ID:</b> <span id="pRef">—</span></div>
+      <div class="profile-row" id="emailRow">
+  <b>Email:</b> <span id="pEmail">—</span>
+  </div>
+
+
+      <div class="change-password">
+        <button class="primary-btn"
+          onclick="window.location.href='/common/change-password.html'">
+          Change Password
+        </button>
+      </div>
+      <div class="change-password" id="changeEmailBox" style="display:none;">
+  <button class="primary-btn" id="changeEmailBtn">
+    Change Email
+  </button>
+</div>
+
+    </div>
+
   </div>
 </div>
+
+<div id="emailModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45);">
+  <div style="
+    background:#fff;
+    max-width:380px;
+    margin:12% auto;
+    padding:24px;
+    border-radius:14px;
+  ">
+    <h3 style="margin-top:0;">Change Email</h3>
+
+    <div class="profile-row">
+      <b>New Email</b><br>
+      <input type="email" id="newEmail"
+        style="width:100%; padding:10px; margin-top:6px;">
+    </div>
+
+    <div class="profile-row">
+      <b>Current Password</b><br>
+      <input type="password" id="currentPassword"
+        style="width:100%; padding:10px; margin-top:6px;">
+    </div>
+
+    <div style="margin-top:20px; display:flex; gap:10px;">
+      <button class="primary-btn" id="confirmEmailChange">Update</button>
+      <button class="primary-btn" style="background:#6b7280;"
+        onclick="document.getElementById('emailModal').style.display='none'">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+
 
 <script type="module" src="../common/profile.js"></script>
 </body>

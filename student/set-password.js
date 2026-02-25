@@ -1,165 +1,74 @@
 import { auth, db } from "../js/firebase.js";
+import { onAuthStateChanged, updatePassword } from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
-  onAuthStateChanged,
-  updatePassword
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  setDoc,
-  serverTimestamp
+  doc, getDoc, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* =====================
-   GLOBALS
-===================== */
-let currentUser = null;
-let allClasses = [];
-let studentDocRef = null;
-
-const msg = document.getElementById("msg");
+const newPwd = document.getElementById("newPassword");
+const confirmPwd = document.getElementById("confirmPassword");
 const saveBtn = document.getElementById("saveBtn");
-const classSelect = document.getElementById("classSelect");
+const msg = document.getElementById("msg");
 
-/* =====================
-   AUTH CHECK
-===================== */
+let currentUser = null;
+let studentDocId = null;
+let studentClassId = null;
+
 onAuthStateChanged(auth, async user => {
-  if (!user) {
-    location.replace("../index.html");
+  if (!user) return location.replace("../index.html");
+  currentUser = user;
+
+  // 🔥 Read user profile
+  const userSnap = await getDoc(doc(db, "users", user.uid));
+  if (!userSnap.exists()) {
+    msg.textContent = "User profile not found";
     return;
   }
 
-  currentUser = user;
+  if (userSnap.data().firstLogin !== true) {
+    // already set
+    return location.replace("dashboard.html");
+  }
 
-  await findStudentDocument(); // 🔥 IMPORTANT
-  loadClasses();
+  // 🔥 Find student record
+  const studentSnap = await getDoc(doc(db, "students", user.uid));
+  if (!studentSnap.exists()) {
+    msg.textContent = "Student record not found. Contact admin.";
+    return;
+  }
+
+  studentDocId = studentSnap.id;
+  studentClassId = studentSnap.data().classId;
+
+  if (!studentClassId) {
+    msg.textContent = "Class not assigned. Contact mentor.";
+    return;
+  }
 });
-
-/* =====================
-   FIND STUDENT DOC
-===================== */
-async function findStudentDocument() {
-  const q = query(
-    collection(db, "students"),
-    where("authUid", "==", currentUser.uid)
-  );
-
-  const snap = await getDocs(q);
-
-  if (snap.empty) {
-    throw new Error("Student record not found. Contact admin.");
-  }
-
-  // There will be only ONE document
-  studentDocRef = doc(db, "students", snap.docs[0].id);
-}
-
-/* =====================
-   LOAD CLASSES
-===================== */
-async function loadClasses() {
-  classSelect.innerHTML = "<option value=''>Loading classes...</option>";
-
-  try {
-    const snap = await getDocs(collection(db, "classes"));
-    allClasses = [];
-
-    snap.forEach(d => {
-      allClasses.push({
-        id: d.id,
-        ...d.data()
-      });
-    });
-
-    classSelect.innerHTML = "<option value=''>Select a class</option>";
-
-    allClasses.forEach(c => {
-      const opt = document.createElement("option");
-      opt.value = c.id;
-      opt.textContent = c.name || c.classCode || c.id;
-      classSelect.appendChild(opt);
-    });
-
-  } catch (err) {
-    console.error(err);
-    msg.innerText = "Failed to load classes";
-  }
-}
 
 /* =====================
    SAVE PASSWORD
 ===================== */
-saveBtn.addEventListener("click", async () => {
-  const classId = classSelect.value;
-  const pass = document.getElementById("newPassword").value.trim();
-  const confirmPass = document.getElementById("confirmPassword").value.trim();
+saveBtn.onclick = async () => {
+  const p1 = newPwd.value.trim();
+  const p2 = confirmPwd.value.trim();
 
-  msg.innerText = "";
-  msg.style.color = "red";
+  if (!p1 || p1.length < 6)
+    return show("Password must be at least 6 characters");
 
-  if (!classId || !pass || !confirmPass) {
-    msg.innerText = "All fields are required";
-    return;
-  }
-
-  if (pass.length < 6) {
-    msg.innerText = "Password must be at least 6 characters";
-    return;
-  }
-
-  if (pass !== confirmPass) {
-    msg.innerText = "Passwords do not match";
-    return;
-  }
+  if (p1 !== p2)
+    return show("Passwords do not match");
 
   try {
-    const selectedClass = allClasses.find(c => c.id === classId);
-    if (!selectedClass) {
-      msg.innerText = "Invalid class selected";
-      return;
-    }
+    // 🔐 Update auth password
+    await updatePassword(currentUser, p1);
 
-    /* ---------- UPDATE AUTH PASSWORD ---------- */
-    await updatePassword(currentUser, pass);
+    // ✅ Mark first login complete
+    await updateDoc(doc(db, "users", currentUser.uid), {
+      firstLogin: false
+    });
 
-    /* ---------- BUILD STUDENT UPDATE ---------- */
-    const studentUpdate = {
-      classId,
-      profileCompleted: true,
-      passwordSet: true,
-      passwordSetDate: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-
-      ...(selectedClass.classCode && { classCode: selectedClass.classCode }),
-      ...(selectedClass.section && { section: selectedClass.section }),
-      ...(selectedClass.semester && { semester: selectedClass.semester }),
-      ...(selectedClass.department && { department: selectedClass.department }),
-      ...(selectedClass.classCode && selectedClass.section && {
-        class_section:
-          selectedClass.classCode + "-" + selectedClass.section
-      })
-    };
-
-    /* ---------- UPDATE STUDENT DOC (MERGE) ---------- */
-    await setDoc(studentDocRef, studentUpdate, { merge: true });
-
-    /* ---------- UPDATE USER META ---------- */
-    await setDoc(
-      doc(db, "users", currentUser.uid),
-      {
-        firstLogin: false,
-        passwordUpdatedAt: serverTimestamp()
-      },
-      { merge: true }
-    );
-
-    msg.style.color = "green";
-    msg.innerText = "Password set successfully! Redirecting...";
+    show("Password updated successfully ✔", "success");
 
     setTimeout(() => {
       location.replace("dashboard.html");
@@ -167,6 +76,11 @@ saveBtn.addEventListener("click", async () => {
 
   } catch (err) {
     console.error(err);
-    msg.innerText = err.message;
+    show("Failed to update password. Re-login and try again.");
   }
-});
+};
+
+function show(text, type = "error") {
+  msg.textContent = text;
+  msg.style.color = type === "success" ? "green" : "red";
+}

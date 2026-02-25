@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Student Summary</title>
+<link rel="stylesheet" href="../css/dashboard.css">
+</head>
+
+<body>
+<div class="card">
+  <h3>Dashboard Overview</h3>
+
+  <div class="stats-container">
+    <div class="stat-box">
+      <h2 id="attendancePercent">–%</h2>
+      <p>Attendance</p>
+    </div>
+
+    <div class="stat-box">
+      <h2 id="markPercent">–%</h2>
+      <p>Internal Marks</p>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db } from "../js/firebase.js";
+import { onAuthStateChanged } from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+import {
+  doc,
+  getDoc,
+  collection,
+  getDocs,
+  query,
+  where
+} from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+onAuthStateChanged(auth, async user => {
+  if (!user) return;
+
+  try {
+
+    /* =====================
+       GET STUDENT PROFILE
+    ===================== */
+    const userSnap = await getDoc(doc(db, "users", user.uid));
+    if (!userSnap.exists()) return;
+
+    const studentId = userSnap.data().studentId;
+    if (!studentId) return;
+
+    let attTotal = 0, attCount = 0;
+    let markTotal = 0, markCount = 0;
+
+    /* =====================
+       ATTENDANCE (ONLY VERIFIED)
+    ===================== */
+    const attQuery = query(
+      collection(db, "attendance_records"),
+      where("verified", "==", true)
+    );
+
+    const attSnap = await getDocs(attQuery);
+
+    attSnap.forEach(d => {
+      const data = d.data();
+      if (!data.students) return;
+
+      const students = Object.values(data.students);
+      const s = students.find(st => st.studentId === studentId);
+
+      if (s && typeof s.percentage === "number") {
+        attTotal += s.percentage;
+        attCount++;
+      }
+    });
+
+    /* =====================
+       INTERNAL MARKS (ONLY VERIFIED)
+    ===================== */
+    const markQuery = query(
+      collection(db, "internal_marks"),
+      where("verified", "==", true)
+    );
+
+    const markSnap = await getDocs(markQuery);
+
+    markSnap.forEach(d => {
+      const data = d.data();
+      if (!data.students) return;
+
+      const students = Object.values(data.students);
+      const s = students.find(st => st.studentId === studentId);
+
+      if (s && typeof s.percentage === "number") {
+        markTotal += s.percentage;
+        markCount++;
+      }
+    });
+
+    document.getElementById("attendancePercent").innerText =
+      attCount ? (attTotal / attCount).toFixed(1) + "%" : "–%";
+
+    document.getElementById("markPercent").innerText =
+      markCount ? (markTotal / markCount).toFixed(1) + "%" : "–%";
+
+  } catch (err) {
+    console.error("Summary load failed:", err);
+
+    document.getElementById("attendancePercent").innerText = "–%";
+    document.getElementById("markPercent").innerText = "–%";
+  }
+});
+</script>
+
+</body>
+</html>

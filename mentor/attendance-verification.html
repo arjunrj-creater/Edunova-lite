@@ -9,6 +9,22 @@
   <link rel="icon" href="../images/logo.png" />
 
   <style>
+    body {
+  margin: 0;
+  background: transparent;
+ }
+
+ .main {
+  padding: 0 !important;
+  margin: 0 !important;
+ }
+
+ .form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+  margin-bottom:20px;
+ }
     .card { margin-top: 20px; }
     .controls {
       display:flex;
@@ -23,19 +39,14 @@
       border-radius:6px;
       font-size:14px;
     }
-    table {
-      width:100%;
-      border-collapse:collapse;
-    }
+    table { width:100%; border-collapse:collapse; }
     th, td {
       padding:12px;
       border-bottom:1px solid #e5e7eb;
       font-size:14px;
     }
-    th {
-      background:#f1f5f9;
-      text-align:left;
-    }
+    th { background:#f1f5f9; text-align:left; }
+
     .btn {
       padding:8px 16px;
       border:none;
@@ -44,21 +55,8 @@
       font-size:14px;
       font-weight:600;
     }
-    .btn-search {
-      background:#2563eb;
-      color:white;
-    }
-    .btn-verify {
-      background:#2563eb;
-      color:white;
-    }
-    .btn-publish {
-      background:#16a34a;
-      color:white;
-    }
-    .btn-search:hover { background:#1d4ed8; }
-    .btn-verify:hover { background:#1d4ed8; }
-    .btn-publish:hover { background:#15803d; }
+    .btn-search { background:#2563eb; color:white; }
+    .btn-publish { background:#16a34a; color:white; }
 
     .alert {
       margin-bottom:14px;
@@ -70,40 +68,13 @@
     .alert.show { display:block; }
     .alert-info { background:#e0f2fe; color:#075985; }
     .alert-success { background:#dcfce7; color:#166534; }
+    .alert-danger { background:#fee2e2; color:#991b1b; }
   </style>
 </head>
 
 <body>
-
-<!-- TOPBAR -->
-<div class="topbar">
-  <button class="hamburger" onclick="toggleSidebar()">☰</button>
-  <div class="brand">
-    <img src="../images/logo.png" class="logo" alt="Edunova">
-    <span>Edunova – Mentor</span>
-  </div>
-  <button class="logout-btn" onclick="logout()">Logout</button>
-</div>
-
-<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
-
-<div class="layout">
-
-  <!-- SIDEBAR -->
-  <div class="sidebar" id="sidebar">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="dashboard.html#students">My Students</a>
-    <a href="dashboard.html#createStudent">Create Student</a>
-    <a href="dashboard.html#uploadStudents">Upload Students</a>
-    <a class="active">Attendance Verification</a>
-    <a href="dashboard.html#marks">Mark Verification</a>
-    <a href="dashboard.html#results">Result Analysis</a>
-    <a href="dashboard.html#profileCard">Profile</a>
-  </div>
-
-  <!-- MAIN -->
+<!---Main-->
   <div class="main">
-
     <div class="card">
       <h3>Attendance Verification</h3>
       <p class="note">Verify and publish attendance uploaded by faculty</p>
@@ -115,13 +86,10 @@
           <option value="">All Subjects</option>
         </select>
 
-        <input
-          type="text"
-          id="studentSearch"
-          placeholder="Enter Student ID"
-        />
+        <input id="studentSearch" placeholder="Enter Student ID" />
 
         <button class="btn btn-search" onclick="searchStudents()">Search</button>
+        <button class="btn btn-publish" onclick="publishAll()">Publish All</button>
       </div>
 
       <table>
@@ -133,17 +101,15 @@
             <th>Subject</th>
             <th>Attended</th>
             <th>%</th>
-            <th>Actions</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
       </table>
     </div>
-
   </div>
 </div>
 
-<!-- 🔥 FIREBASE + LOGIC -->
 <script type="module">
 import { auth, db } from "../js/firebase.js";
 import { onAuthStateChanged } from
@@ -158,32 +124,41 @@ import {
 
 const tableBody = document.getElementById("tableBody");
 const subjectFilter = document.getElementById("subjectFilter");
-const alertBox = document.getElementById("alert");
 const searchInput = document.getElementById("studentSearch");
+const alertBox = document.getElementById("alert");
 
 let mentorUid = null;
 let mentorClassId = null;
 let attendanceDocs = [];
+let subjectMap = {};
 
+/* AUTH + CLASS */
 onAuthStateChanged(auth, async user => {
-  if (!user) {
-    location.replace("../index.html");
-    return;
-  }
+  if (!user) return location.replace("../index.html");
 
   mentorUid = user.uid;
-
   const mentorSnap = await getDoc(doc(db, "mentors", mentorUid));
-  if (!mentorSnap.exists()) {
-    location.replace("set-password.html");
+
+  if (!mentorSnap.exists() || !mentorSnap.data().classId) {
+    showAlert("Class not assigned to mentor", "danger");
     return;
   }
 
   mentorClassId = mentorSnap.data().classId;
+  await loadSubjects();
   loadAttendance();
 });
 
-// 🔥 LOAD DATA ONCE
+/* SUBJECT NAMES */
+async function loadSubjects() {
+  subjectMap = {};
+  const snap = await getDocs(collection(db, "subjects"));
+  snap.forEach(d => {
+    subjectMap[d.id] = d.data().subject_name || d.id;
+  });
+}
+
+/* LOAD ATTENDANCE (ALL SUBJECTS OF CLASS) */
 async function loadAttendance() {
   attendanceDocs = [];
   tableBody.innerHTML = "";
@@ -204,29 +179,21 @@ async function loadAttendance() {
     subjectSet.add(data.subjectId);
   });
 
-  subjectSet.forEach(s => {
+  subjectSet.forEach(id => {
     const opt = document.createElement("option");
-    opt.value = s;
-    opt.textContent = s;
+    opt.value = id;
+    opt.textContent = subjectMap[id] || id;
     subjectFilter.appendChild(opt);
   });
 
   renderTable();
 }
 
-// 🔍 SEARCH BUTTON ACTION
-window.searchStudents = function () {
-  renderTable();
-};
-
-// 🔁 SUBJECT FILTER CHANGE
+/* SEARCH */
+window.searchStudents = () => renderTable();
 subjectFilter.addEventListener("change", renderTable);
 
-// ⌨️ ENTER KEY SEARCH
-searchInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") searchStudents();
-});
-
+/* TABLE */
 function renderTable() {
   tableBody.innerHTML = "";
   let i = 1;
@@ -238,61 +205,72 @@ function renderTable() {
     .filter(r => !subjectValue || r.subjectId === subjectValue)
     .forEach(record => {
       record.students.forEach(s => {
-
-        if (
-          searchValue &&
-          !s.studentId.toLowerCase().includes(searchValue)
-        ) return;
+        if (searchValue && !s.studentId.toLowerCase().includes(searchValue)) return;
 
         tableBody.innerHTML += `
           <tr>
             <td>${i++}</td>
             <td>${s.studentId}</td>
             <td>${s.studentName}</td>
-            <td>${record.subjectId}</td>
+            <td>${subjectMap[record.subjectId]}</td>
             <td>${s.attended}/${record.totalClasses}</td>
             <td>${s.percentage}%</td>
             <td>
-              ${
-                record.verifiedByMentor
-                  ? `<button class="btn btn-publish" onclick="publish('${record.id}')">Publish</button>`
-                  : `<button class="btn btn-verify" onclick="verify('${record.id}')">Verify</button>`
-              }
+              <button class="btn btn-publish"
+                onclick="publish('${record.id}')">Publish</button>
             </td>
-          </tr>
-        `;
+          </tr>`;
       });
     });
 
   if (i === 1) {
-    tableBody.innerHTML = `
-      <tr>
-        <td colspan="7" style="text-align:center;color:#6b7280;padding:20px;">
-          No students found
-        </td>
-      </tr>
-    `;
+    tableBody.innerHTML =
+      `<tr><td colspan="7" style="text-align:center">No records found</td></tr>`;
   }
 }
 
-window.verify = async function (id) {
+/* SINGLE PUBLISH */
+window.publish = async id => {
   await updateDoc(doc(db, "attendance_records", id), {
     verifiedByMentor: true,
-    mentorUid
-  });
-  showAlert("Attendance verified ✔", "info");
-  loadAttendance();
-};
-
-window.publish = async function (id) {
-  await updateDoc(doc(db, "attendance_records", id), {
     published: true,
-    publishedAt: serverTimestamp()
+    publishedAt: serverTimestamp(),
+    mentorUid
   });
   showAlert("Attendance published 🎉", "success");
   loadAttendance();
 };
 
+/* 🔥 PUBLISH ALL (SUBJECT-WISE) */
+window.publishAll = async () => {
+  const subjectValue = subjectFilter.value;
+  if (!subjectValue)
+    return showAlert("Select a subject to publish all", "danger");
+
+  const records = attendanceDocs.filter(
+    r => r.subjectId === subjectValue
+  );
+
+  if (records.length === 0)
+    return showAlert("No records to publish", "info");
+
+  for (const r of records) {
+    await updateDoc(doc(db, "attendance_records", r.id), {
+      verifiedByMentor: true,
+      published: true,
+      publishedAt: serverTimestamp(),
+      mentorUid
+    });
+  }
+
+  showAlert(
+    `Published all attendance for ${subjectMap[subjectValue]}`,
+    "success"
+  );
+  loadAttendance();
+};
+
+/* ALERT */
 function showAlert(msg, type) {
   alertBox.textContent = msg;
   alertBox.className = `alert alert-${type} show`;

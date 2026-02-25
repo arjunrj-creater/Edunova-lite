@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* =====================
+       COMMON
+    ===================== */
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    function isMentor() {
+      return isLoggedIn()
+        && exists(/databases/$(database)/documents/mentors/$(request.auth.uid));
+    }
+
+    function isStudent() {
+      return isLoggedIn()
+        && exists(/databases/$(database)/documents/students/$(request.auth.uid));
+    }
+
+    function isFaculty() {
+      return isLoggedIn()
+        && exists(/databases/$(database)/documents/faculties/$(request.auth.uid));
+    }
+
+    /* =====================
+       USERS
+    ===================== */
+    match /users/{userId} {
+      allow read, write: if isLoggedIn();
+    }
+
+    match /students/{studentId} {
+      allow read, create, update: if isLoggedIn();
+    }
+
+    match /mentors/{mentorId} {
+      allow read, write: if isLoggedIn();
+    }
+
+    match /faculties/{facultyId} {
+      allow read, write: if isLoggedIn();
+    }
+
+    match /classes/{classId} {
+      allow read: if isLoggedIn();
+    }
+
+    match /subjects/{subjectId} {
+      allow read: if isLoggedIn();
+    }
+
+    /* =====================
+       ATTENDANCE RECORDS
+    ===================== */
+    match /attendance_records/{recordId} {
+      allow read, list: if isLoggedIn();
+      allow create, update: if isLoggedIn();
+    }
+
+    /* =====================
+       INTERNAL MARKS ✅ FIXED
+    ===================== */
+    match /internal_marks/{markId} {
+
+      // 👨‍🏫 Mentor: view + verify marks
+      allow read, list, update: if isMentor();
+
+      // 👩‍🏫 Faculty: upload marks
+      allow create: if isFaculty();
+
+      // 🎓 Student: view ONLY published marks
+      allow read: if isStudent()
+        && resource.data.published == true;
+    }
+  }
+}

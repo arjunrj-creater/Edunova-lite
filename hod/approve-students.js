@@ -84,7 +84,12 @@ window.approveAll = async () => {
       if (!authUid) {
         const studentId = s.student_id || s.studentId;
         const email = `${studentId}@edunova.com`;
-        const password = s.password || s.passwordHint || "Temp@123";
+        const password = s.tempPassword?.trim();
+        if (!s.tempPassword) {
+  console.warn("No password set by mentor:", s.student_id);
+  continue;
+}
+
 
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         authUid = cred.user.uid;
@@ -111,7 +116,8 @@ window.approveAll = async () => {
         authCreated: true,
         authUid,
         revokedAt: null,
-        approvedAt: new Date()
+        approvedAt: new Date(),
+        tempPassword: ""
       });
 
     } catch (err) {

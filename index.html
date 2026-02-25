@@ -1,162 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Edunova | Academic Management Platform</title>
-  <link rel="stylesheet" href="css/style.css" />
+<meta charset="UTF-8">
+<title>Edunova Lite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+
+body{
+min-height:100vh;
+background:linear-gradient(-45deg,#0d47a1,#1565c0,#1e88e5,#42a5f5);
+background-size:400% 400%;
+animation:bgMove 14s ease infinite;
+display:flex;
+justify-content:center;
+align-items:center;
+padding:40px 20px;
+transition:.5s;
+}
+
+@keyframes bgMove{
+0%{background-position:0% 50%;}
+50%{background-position:100% 50%;}
+100%{background-position:0% 50%;}
+}
+
+.fade-out{opacity:0;transform:scale(1.04);}
+
+.container{
+width:100%;
+max-width:1200px;
+text-align:center;
+color:white;
+animation:fadeIn .9s ease;
+}
+
+@keyframes fadeIn{
+from{opacity:0;transform:translateY(30px);}
+to{opacity:1;transform:translateY(0);}
+}
+
+/* LOGO */
+
+.container img{
+width:130px;
+background:white;
+padding:15px;
+border-radius:18px;
+margin-bottom:22px;
+box-shadow:0 20px 50px rgba(0,0,0,.35);
+}
+
+/* TITLE */
+
+h1{
+font-size:60px;
+font-weight:700;
+letter-spacing:1px;
+text-shadow:0 10px 30px rgba(0,0,0,.3);
+}
+
+/* FLOAT LOGIN BUTTON PRO */
+
+.login-btn{
+position:fixed;
+right:45px;
+bottom:45px;
+padding:18px 44px;
+font-size:18px;
+border:none;
+border-radius:70px;
+background:white;
+color:#0d47a1;
+cursor:pointer;
+font-weight:600;
+box-shadow:0 18px 50px rgba(0,0,0,.4);
+transition:.35s;
+animation:pulse 2.6s infinite;
+z-index:999;
+}
+
+@keyframes pulse{
+0%{box-shadow:0 0 0 0 rgba(255,255,255,.5);}
+70%{box-shadow:0 0 0 18px rgba(255,255,255,0);}
+100%{box-shadow:0 0 0 0 rgba(255,255,255,0);}
+}
+
+.login-btn:hover{
+transform:translateY(-7px) scale(1.05);
+animation:none;
+}
+
+/* GRID */
+
+.left-panel{
+margin-top:60px;
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+gap:30px;
+}
+
+/* PRO MAX GLASS CARDS */
+
+.overview-card{
+position:relative;
+overflow:hidden;
+background:rgba(255,255,255,.18);
+padding:32px;
+border-radius:22px;
+backdrop-filter:blur(16px);
+box-shadow:0 22px 55px rgba(0,0,0,.30);
+transition:.45s;
+cursor:pointer;
+}
+
+/* LIGHT SWEEP EFFECT */
+.overview-card::before{
+content:"";
+position:absolute;
+top:0;
+left:-120%;
+width:80%;
+height:100%;
+background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);
+transform:skewX(-25deg);
+}
+
+.overview-card:hover::before{
+left:140%;
+transition:1s;
+}
+
+.overview-card:hover{
+transform:translateY(-12px) scale(1.03);
+background:rgba(255,255,255,.30);
+}
+
+.overview-card h2{margin-bottom:12px;}
+.overview-card p{font-size:14.5px;line-height:1.7;}
+
+.note{margin-top:30px;opacity:.9;}
+
+@media(max-width:600px){
+h1{font-size:40px;}
+.login-btn{right:18px;bottom:18px;padding:12px 24px;}
+}
+
+</style>
 </head>
+
 <body>
 
-  <!-- HEADER -->
-  <header class="top-bar">
-    <div class="header-content">
-      <img src="images/logo.png" alt="Edunova Logo" class="logo-img">
-      <div>
-        <div class="logo-text">Edunova</div>
-        <div class="tagline">Academic Management Platform</div>
-      </div>
-    </div>
-  </header>
+<div class="container">
 
-  <!-- MAIN -->
-  <div class="main-layout">
+<img src="images/logo.png">
 
-    <!-- LOGIN PANEL -->
-    <div class="right-panel">
-      <h3>🔐 Sign In</h3>
+<h1>Edunova Lite</h1>
 
-      <!-- ROLE (NOT FOR HOD) -->
-      <div class="form-group">
-        <label>👤 Role</label>
-        <select id="role">
-          <option value="student">Student</option>
-          <option value="faculty">Faculty</option>
-          <option value="mentor">Mentor</option>
-        </select>
-      </div>
+<button class="login-btn" onclick="goLogin()">Login / Register</button>
 
-      <div class="form-group">
-        <label>🆔 Username</label>
-        <input
-          type="text"
-          id="username"
-          placeholder="Student ID / Mentor ID / HOD Email"
-        />
-      </div>
+<div class="left-panel">
 
-      <!-- PASSWORD (ONLY AREA MODIFIED) -->
-      <div class="form-group">
-        <label>🔑 Password</label>
-        <div style="position:relative;">
-          <input
-            type="password"
-            id="password"
-            placeholder="Enter password"
-          />
-          <span
-            id="togglePwd"
-            style="
-              position:absolute;
-              right:12px;
-              top:50%;
-              transform:translateY(-50%);
-              cursor:pointer;
-              font-size:13px;
-              color:#2563eb;
-              user-select:none;
-            "
-          >
-            Show
-          </span>
-        </div>
-      </div>
 
-      <div class="auth-links">
-        <a href="#" onclick="alert('Contact mentor or HOD to reset password')">
-          Forgot password?
-        </a>
-      </div>
 
-      <button id="loginBtn" onclick="handleLogin()">Login</button>
+<div class="overview-card" onclick="goRole('student')">
+<h2>🎓 Students</h2>
+<p>Students view attendance, marks and academic updates through a structured portal.</p>
+</div>
 
-      <p id="loginStatus" class="login-status"></p>
+<div class="overview-card" onclick="goRole('faculty')">
+<h2>👩‍🏫 Faculty</h2>
+<p>Faculty manage attendance, internal marks and academic records efficiently.</p>
+</div>
 
-      <p class="login-note">
-        Access credentials are provided by the institution.
-      </p>
-    </div>
+<div class="overview-card" onclick="goRole('mentor')">
+<h2>🧑‍🏫 Mentor</h2>
+<p>Mentors monitor overall student performance using summarized dashboards.</p>
+</div>
 
-    <!-- OVERVIEW (UNCHANGED) -->
-    <div class="left-panel">
+</div>
 
-      <div class="overview-card">
-        <h2>🏛️ Institutions</h2>
-        <p>Institutions affiliated with Edunova can access a centralized academic management system to handle
-           student records, internal evaluations, attendance management and academic monitoring securely.</p>
-      </div>
+<p class="note">"Smart and Simple Department Management System"</p>
 
-      <div class="overview-card" onclick="selectRole('student')">
-        <h2>🎓 Students</h2>
-        <p>Students can securely view attendance, internal assessment marks and academic updates provided by
-           faculty members through a simple and structured interface.</p>
-      </div>
+</div>
 
-      <div class="overview-card" onclick="selectRole('faculty')">
-        <h2>👩‍🏫 Faculty</h2>
-        <p>Faculty members are provided with tools to manage academic activities including attendance entry,
-           internal mark updates and academic record maintenance in a centralized system.</p>
-      </div>
-
-      <div class="overview-card" onclick="selectRole('mentor')">
-        <h2>🧑‍🏫 Mentor</h2>
-        <p>Mentors can monitor overall student performance and 
-           academic progress using summarized views and academic insights for effective guidance.</p>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- PASSWORD VISIBILITY LOGIC (FIXED & STABLE) -->
 <script>
-  const pwdInput = document.getElementById("password");
-  const toggleBtn = document.getElementById("togglePwd");
 
-  let isVisible = false;
-  let autoHideTimer = null;
+function goLogin(){
+document.body.classList.add("fade-out");
+setTimeout(()=>{
+window.location="loginpage.html";
+},450);
+}
 
-  function hidePassword() {
-    pwdInput.type = "password";
-    toggleBtn.innerText = "Show";
-    isVisible = false;
-    clearTimeout(autoHideTimer);
-  }
+function goRole(role){
+document.body.classList.add("fade-out");
+setTimeout(()=>{
+window.location="loginpage.html?role="+role;
+},450);
+}
 
-  function startAutoHideTimer() {
-    clearTimeout(autoHideTimer);
-    autoHideTimer = setTimeout(hidePassword, 10000); // 10 seconds
-  }
-
-  // Show / Hide button
-  toggleBtn.addEventListener("click", () => {
-    if (!isVisible) {
-      pwdInput.type = "text";
-      toggleBtn.innerText = "Hide";
-      isVisible = true;
-      startAutoHideTimer();
-    } else {
-      hidePassword();
-    }
-  });
-
-  // 🔥 FINAL FIX: typing immediately hides password
-  pwdInput.addEventListener("input", () => {
-    if (isVisible) {
-      hidePassword(); // instant hide on typing
-    }
-  });
 </script>
-  <script type="module" src="js/firebase.js"></script>
-  <script type="module" src="js/login.js"></script>
+
 </body>
 </html>

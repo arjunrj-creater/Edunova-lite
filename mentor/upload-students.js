@@ -1,10 +1,9 @@
-// ================= IMPORT =================
+import * as XLSX from "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm";
 import { saveStudents } from "./studentService.js";
 
-// ================= DOM READY =================
+
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ================= ELEMENTS =================
   const fileInput = document.getElementById("excelFile");
   const previewBtn = document.getElementById("previewBtn");
   const previewSection = document.getElementById("previewSection");
@@ -14,7 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const resultSection = document.getElementById("resultSection");
   const resultTable = document.getElementById("resultTable");
 
-  // ================= STATE =================
   let parsedRows = [];
   let rowErrors = [];
   let hasErrors = false;
@@ -29,14 +27,13 @@ document.addEventListener("DOMContentLoaded", () => {
     "status"
   ];
 
-  // ================= UTIL =================
   const normalizeKey = k =>
     k.toLowerCase().trim().replace(/\s+/g, "_");
 
   const normalizeValue = (key, val) => {
     val = String(val).trim();
 
-    if (!val || val === "-" || val.toLowerCase() === "nil") return "";
+    if (!val) return "";
 
     switch (key) {
       case "student_id":
@@ -65,30 +62,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // ================= PREVIEW =================
   previewBtn.addEventListener("click", () => {
+
     const file = fileInput.files[0];
     if (!file) {
-      alert("Please select an Excel file");
+      alert("Please select a file");
       return;
     }
 
     const reader = new FileReader();
-    reader.onload = e => {
-      const workbook = XLSX.read(
-        new Uint8Array(e.target.result),
-        { type: "array" }
-      );
+
+    reader.onload = (e) => {
+
+      let workbook;
+
+      if (file.name.endsWith(".csv")) {
+        const text = new TextDecoder().decode(e.target.result);
+        workbook = XLSX.read(text, { type: "string" });
+      } else {
+        workbook = XLSX.read(
+          new Uint8Array(e.target.result),
+          { type: "array" }
+        );
+      }
+
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
       validate(rows);
     };
+
     reader.readAsArrayBuffer(file);
   });
 
-  // ================= VALIDATION =================
   function validate(rows) {
+
     parsedRows = [];
     rowErrors = [];
     hasErrors = false;
@@ -99,6 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const excelHeaders = Object.keys(rows[0]).map(normalizeKey);
+
     const missingCols = REQUIRED_COLUMNS.filter(
       col => !excelHeaders.includes(col)
     );
@@ -109,10 +118,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     rows.forEach((row, index) => {
+
       const clean = {};
       const errors = [];
 
       REQUIRED_COLUMNS.forEach(col => {
+
         const originalKey = Object.keys(row).find(
           k => normalizeKey(k) === col
         );
@@ -121,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const value = normalizeValue(col, raw);
 
         if (!value) {
-          errors.push(`${col} is invalid or empty`);
+          errors.push(`${col} invalid`);
         }
 
         clean[col] = value;
@@ -129,10 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (errors.length) {
         hasErrors = true;
-        rowErrors.push({
-          row: index + 2,
-          errors
-        });
+        rowErrors.push({ row: index + 2, errors });
       }
 
       parsedRows.push(clean);
@@ -141,28 +149,32 @@ document.addEventListener("DOMContentLoaded", () => {
     renderPreview();
   }
 
-  // ================= PREVIEW TABLE =================
   function renderPreview() {
+
     previewSection.classList.remove("hidden");
 
     const thead = previewTable.querySelector("thead");
     const tbody = previewTable.querySelector("tbody");
+
     thead.innerHTML = "";
     tbody.innerHTML = "";
 
     const headerRow = document.createElement("tr");
+
     REQUIRED_COLUMNS.forEach(col => {
       const th = document.createElement("th");
       th.textContent = col;
       headerRow.appendChild(th);
     });
+
     thead.appendChild(headerRow);
 
     parsedRows.forEach((row, idx) => {
+
       const tr = document.createElement("tr");
 
       if (rowErrors.find(e => e.row === idx + 2)) {
-        tr.style.background = "#fee2e2";
+        tr.classList.add("error-row");
       }
 
       REQUIRED_COLUMNS.forEach(col => {
@@ -175,23 +187,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     confirmBtn.disabled = hasErrors;
-    confirmBtn.style.opacity = hasErrors ? "0.6" : "1";
-    confirmBtn.style.cursor = hasErrors ? "not-allowed" : "pointer";
-
-    if (hasErrors) {
-      alert(
-        "Fix the following errors before saving:\n\n" +
-        rowErrors
-          .map(e => `Row ${e.row}: ${e.errors.join(", ")}`)
-          .join("\n")
-      );
-    }
   }
 
-  // ================= SAVE =================
   confirmBtn.addEventListener("click", async () => {
+
     if (hasErrors) {
-      alert("Fix validation errors before saving");
+      alert("Fix errors before saving");
       return;
     }
 
@@ -199,6 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
     confirmBtn.textContent = "Saving...";
 
     try {
+
       await saveStudents(parsedRows);
 
       previewSection.classList.add("hidden");
@@ -206,7 +208,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       renderResult(parsedRows);
 
-      // reset
       fileInput.value = "";
       parsedRows = [];
       rowErrors = [];
@@ -217,29 +218,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } catch (err) {
       console.error(err);
-      alert("Save failed. Check console.");
+      alert("Save failed");
       confirmBtn.textContent = "Confirm & Save";
       confirmBtn.disabled = false;
     }
   });
 
-  // ================= RESULT =================
   function renderResult(rows) {
+
     resultTable.innerHTML = "";
 
     const table = document.createElement("table");
 
     const thead = document.createElement("thead");
     const trh = document.createElement("tr");
+
     REQUIRED_COLUMNS.forEach(col => {
       const th = document.createElement("th");
       th.textContent = col;
       trh.appendChild(th);
     });
+
     thead.appendChild(trh);
     table.appendChild(thead);
 
     const tbody = document.createElement("tbody");
+
     rows.forEach(row => {
       const tr = document.createElement("tr");
       REQUIRED_COLUMNS.forEach(col => {
@@ -254,14 +258,12 @@ document.addEventListener("DOMContentLoaded", () => {
     resultTable.appendChild(table);
   }
 
-  // ================= CANCEL =================
   cancelBtn.addEventListener("click", () => {
     previewSection.classList.add("hidden");
     parsedRows = [];
     rowErrors = [];
     hasErrors = false;
     confirmBtn.disabled = true;
-    confirmBtn.textContent = "Confirm & Save";
   });
 
 });

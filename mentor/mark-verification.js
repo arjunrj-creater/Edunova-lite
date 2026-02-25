@@ -5,18 +5,51 @@ import {
   collection,
   getDocs,
   doc,
-  updateDoc
+  updateDoc,
+  getDoc,
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* ======================
-   AUTH CHECK
+   DOM REFERENCES
 ====================== */
-onAuthStateChanged(auth, user => {
+const tableBody = document.getElementById("markList");
+const subjectFilter = document.getElementById("subjectFilter");
+const searchInput = document.getElementById("studentSearch");
+const alertBox = document.getElementById("alert");
+
+/* ======================
+   GLOBAL STATE
+====================== */
+let mentorUid = null;
+let mentorClassId = null;
+
+let markDocs = [];
+let subjectMap = {};   // subjectId → subject_name
+
+/* ======================
+   AUTH + CLASS DETECTION
+====================== */
+onAuthStateChanged(auth, async user => {
   if (!user) {
     location.replace("../index.html");
+    return;
   }
-});
 
+  mentorUid = user.uid;
+
+  const mentorSnap = await getDoc(doc(db, "mentors", mentorUid));
+  if (!mentorSnap.exists()) {
+    showAlert("Mentor profile not found", "danger");
+    return;
+  }
+
+  mentorClassId = mentorSnap.data().classId;
+
+  await loadSubjects();
+  loadMarks();
+});
 
 /* ======================
    LOGOUT
@@ -27,69 +60,192 @@ window.logout = async () => {
 };
 
 /* ======================
-   LOAD MARKS (FINAL)
+   LOAD SUBJECT NAMES
+====================== */
+async function loadSubjects() {
+  subjectMap = {};
+  const snap = await getDocs(collection(db, "subjects"));
+  snap.forEach(d => {
+    subjectMap[d.id] =
+      d.data().subject_name || d.id;
+  });
+}
+
+/* ======================
+   LOAD MARKS (CLASS ONLY)
 ====================== */
 async function loadMarks() {
-  const tbody = document.getElementById("markList");
-  tbody.innerHTML = `<tr><td colspan="5">Loading...</td></tr>`;
+  tableBody.innerHTML =
+    `<tr><td colspan="6">Loading...</td></tr>`;
+  markDocs = [];
+  subjectFilter.innerHTML =
+    `<option value="">All Subjects</option>`;
 
   try {
-    const snap = await getDocs(collection(db, "internal_marks"));
-    let rows = 0;
+    const q = query(
+      collection(db, "internal_marks"),
+      where("classId", "==", mentorClassId),
+      where("published", "==", false)
+    );
+
+    const snap = await getDocs(q);
+    const subjectSet = new Set();
 
     snap.forEach(docSnap => {
       const d = docSnap.data();
+      if (!Array.isArray(d.students)) return;
 
-      // mentor only verifies UNPUBLISHED marks
-      if (d.published === true) return;
-
-      rows++;
-
-      tbody.innerHTML += `
-        <tr>
-          <td>
-            ${d.studentName}<br>
-            <small>${d.studentId}</small>
-          </td>
-          <td>${d.subjectId}</td>
-          <td>${d.marksObtained}/${d.totalMarks}</td>
-          <td>${d.percentage}%</td>
-          <td>
-            <button class="primary-btn"
-              onclick="verifyMark('${docSnap.id}')">
-              Verify
-            </button>
-          </td>
-        </tr>
-      `;
+      markDocs.push({ id: docSnap.id, ...d });
+      subjectSet.add(d.subjectId);
     });
 
-    if (rows === 0) {
-      tbody.innerHTML = `<tr><td colspan="5">No pending marks</td></tr>`;
-    }
+    // Populate subject filter (OPTIONAL filter)
+    subjectSet.forEach(id => {
+      const opt = document.createElement("option");
+      opt.value = id;
+      opt.textContent = subjectMap[id] || id;
+      subjectFilter.appendChild(opt);
+    });
+
+    renderTable();
 
   } catch (err) {
     console.error("🔥 Mark load error:", err);
-    tbody.innerHTML = `<tr><td colspan="5">Permission error</td></tr>`;
+    tableBody.innerHTML =
+      `<tr><td colspan="6">Failed to load marks</td></tr>`;
   }
 }
 
 /* ======================
-   VERIFY MARK
+   SEARCH & FILTER
 ====================== */
-window.verifyMark = async function (id) {
-  try {
-    await updateDoc(doc(db, "internal_marks", id), {
-      published: true,
-      verifiedByMentor: true,
-      verifiedAt: new Date()
+window.searchStudents = () => renderTable();
+subjectFilter.addEventListener("change", renderTable);
+
+searchInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") renderTable();
+});
+
+/* ======================
+   RENDER TABLE
+====================== */
+function renderTable() {
+  tableBody.innerHTML = "";
+  let i = 1;
+
+  const subjectValue = subjectFilter.value;
+  const searchValue = searchInput.value.trim().toLowerCase();
+
+  markDocs
+    .filter(d => !subjectValue || d.subjectId === subjectValue)
+    .forEach(record => {
+      record.students.forEach(student => {
+
+        if (
+          searchValue &&
+          !student.studentId.toLowerCase().includes(searchValue)
+        ) return;
+
+        tableBody.innerHTML += `
+          <tr>
+            <td>${i++}</td>
+            <td>${student.studentId}</td>
+            <td>${student.studentName}</td>
+            <td>${subjectMap[record.subjectId]}</td>
+            <td>${student.total}</td>
+            <td>
+              <button class="primary-btn"
+                onclick="verifySingle('${record.id}')">
+                Verify
+              </button>
+            </td>
+          </tr>
+        `;
+      });
     });
 
+  if (i === 1) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="6"
+          style="text-align:center;color:#6b7280;padding:20px;">
+          No records found
+        </td>
+      </tr>
+    `;
+  }
+}
+
+/* ======================
+   VERIFY SINGLE (DOC LEVEL)
+====================== */
+window.verifySingle = async function (docId) {
+  try {
+    await updateDoc(doc(db, "internal_marks", docId), {
+      verifiedByMentor: true,
+      published: true,
+      verifiedAt: new Date(),
+      mentorUid
+    });
+
+    showAlert("Marks verified ✔", "success");
     loadMarks();
+
   } catch (err) {
-    console.error("🔥 Verify error:", err);
-    alert("Failed to verify mark");
+    console.error(err);
+    showAlert("Failed to verify marks", "danger");
   }
 };
+
+/* ======================
+   🔥 VERIFY ALL (SUBJECT-WISE)
+====================== */
+window.verifyAll = async function () {
+  const subjectValue = subjectFilter.value;
+
+  if (!subjectValue) {
+    showAlert("Select a subject to verify all", "danger");
+    return;
+  }
+
+  const records = markDocs.filter(
+    r => r.subjectId === subjectValue
+  );
+
+  if (records.length === 0) {
+    showAlert("No records to verify", "info");
+    return;
+  }
+
+  try {
+    for (const r of records) {
+      await updateDoc(doc(db, "internal_marks", r.id), {
+        verifiedByMentor: true,
+        published: true,
+        verifiedAt: new Date(),
+        mentorUid
+      });
+    }
+
+    showAlert(
+      `Verified all marks for ${subjectMap[subjectValue]}`,
+      "success"
+    );
+    loadMarks();
+
+  } catch (err) {
+    console.error(err);
+    showAlert("Verify all failed", "danger");
+  }
+};
+
+/* ======================
+   ALERT
+====================== */
+function showAlert(msg, type) {
+  alertBox.textContent = msg;
+  alertBox.className = `alert alert-${type} show`;
+  setTimeout(() => alertBox.classList.remove("show"), 2500);
+}
 
 loadMarks();
