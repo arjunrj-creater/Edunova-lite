@@ -173,5 +173,5 @@ This project is licensed under the **MIT License**.
 
 ## 🔹 Author
 
-**Arjun RJ**  
+**Futurestack**  
 Creator of Edunova Lite
